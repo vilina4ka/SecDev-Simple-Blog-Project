@@ -1,6 +1,6 @@
-# SecDev Course Template
+# SecDev Course Simple Blog Project
 
-Стартовый шаблон для студенческого репозитория (HSE SecDev 2025).
+ Проект представляет собой мини-блог без публичных аккаунтов.
 
 ## Быстрый старт
 ```bash
@@ -20,7 +20,7 @@ pytest -q
 pre-commit run --all-files
 ```
 
-## Тесты
+## Запуск тестов
 ```bash
 pytest -q
 ```
@@ -38,9 +38,13 @@ docker compose up --build
 ```
 
 ## Эндпойнты
-- `GET /health` → `{"status": "ok"}`
-- `POST /items?name=...` — демо-сущность
-- `GET /items/{id}`
+- `CRUD /posts`
+— `GET /posts?status=&tag=`
+
+## Сущности
+— `User`
+— `Post(title, body, status)`
+— `Tag`
 
 ## Формат ошибок
 Все ошибки — JSON-обёртка:
