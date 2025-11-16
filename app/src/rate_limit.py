@@ -35,9 +35,7 @@ def check_rate_limit(
     # Очищаем старые записи
     attempts = _rate_limit_store[key]
     attempts_clean = {
-        timestamp: count
-        for timestamp, count in attempts.items()
-        if now - timestamp < window
+        timestamp: count for timestamp, count in attempts.items() if now - timestamp < window
     }
 
     # Подсчитываем попытки в окне
@@ -80,15 +78,11 @@ def check_account_rate_limit(username: str) -> Tuple[bool, Optional[float]]:
     Returns:
         Tuple[bool, Optional[float]]: (разрешено, время до разблокировки)
     """
-    return check_rate_limit(
-        f"account:{username}", MAX_ATTEMPTS_PER_ACCOUNT, ACCOUNT_WINDOW_SECONDS
-    )
+    return check_rate_limit(f"account:{username}", MAX_ATTEMPTS_PER_ACCOUNT, ACCOUNT_WINDOW_SECONDS)
 
 
 def reset_rate_limit(identifier: str):
     """Сбрасывает rate limit для идентификатора (при успешной аутентификации)."""
     for key in list(_rate_limit_store.keys()):
-        if key.startswith(f"ip:{identifier}") or key.startswith(
-            f"account:{identifier}"
-        ):
+        if key.startswith(f"ip:{identifier}") or key.startswith(f"account:{identifier}"):
             del _rate_limit_store[key]

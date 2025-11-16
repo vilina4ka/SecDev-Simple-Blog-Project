@@ -13,9 +13,7 @@ from app.src.rate_limit import check_account_rate_limit, check_ip_rate_limit, re
 from app.src.rfc7807_handler import problem, safe_log
 from app.src.schemas import ItemCreate, PostCreate, PostUpdate, UserRegister
 
-correlation_id_ctx: ContextVar[Optional[str]] = ContextVar(
-    "correlation_id", default=None
-)
+correlation_id_ctx: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
 
 
 class CorrelationIdFilter(logging.Filter):
@@ -81,12 +79,8 @@ async def api_error_handler(request: Request, exc: ApiError):
     cid = correlation_id_ctx.get()
 
     if exc.status >= 500:
-        detail = (
-            "An internal error occurred. Please contact support with correlation_id."
-        )
-        safe_log(
-            logging.ERROR, f"ApiError: {exc.message}", correlation_id=cid, code=exc.code
-        )
+        detail = "An internal error occurred. Please contact support with correlation_id."
+        safe_log(logging.ERROR, f"ApiError: {exc.message}", correlation_id=cid, code=exc.code)
     else:
         detail = exc.message
         safe_log(
@@ -112,9 +106,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     detail = exc.detail if isinstance(exc.detail, str) else "http_error"
 
     if exc.status_code >= 500:
-        detail = (
-            "An internal error occurred. Please contact support with correlation_id."
-        )
+        detail = "An internal error occurred. Please contact support with correlation_id."
         safe_log(
             logging.ERROR,
             f"HTTPException: {exc.detail}",
@@ -271,9 +263,7 @@ def create_post(post: PostCreate, request: Request):
 
 
 @app.get("/posts", include_in_schema=False)
-def list_posts(
-    request: Request, status: Optional[str] = None, tag: Optional[str] = None
-):
+def list_posts(request: Request, status: Optional[str] = None, tag: Optional[str] = None):
     user_id = getattr(request.state, "user_id", None) or "anonymous"
 
     posts = [p for p in _DB["posts"] if p.get("user_id") == user_id]
@@ -346,9 +336,7 @@ def update_post(post_id: int, post_update: PostUpdate, request: Request):
             f"post_id={post_id}, owner={post.get('user_id')}",
             correlation_id=correlation_id_ctx.get(),
         )
-        raise ApiError(
-            code="forbidden", message="You can only edit your own posts", status=403
-        )
+        raise ApiError(code="forbidden", message="You can only edit your own posts", status=403)
 
     if post_update.title is not None:
         post["title"] = post_update.title
@@ -391,9 +379,7 @@ def delete_post(post_id: int, request: Request):
             f"post_id={post_id}, owner={post.get('user_id')}",
             correlation_id=correlation_id_ctx.get(),
         )
-        raise ApiError(
-            code="forbidden", message="You can only delete your own posts", status=403
-        )
+        raise ApiError(code="forbidden", message="You can only delete your own posts", status=403)
 
     _DB["posts"].pop(post_index)
 

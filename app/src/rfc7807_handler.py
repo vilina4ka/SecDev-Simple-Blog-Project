@@ -24,9 +24,7 @@ def mask_pii(text: str) -> str:
     # Маскируем пароли и секреты (после JWT, чтобы не перехватывать JWT токены)
     text = PASSWORD_PATTERN.sub(r"\1: ***MASKED***", text)
 
-    text = EMAIL_PATTERN.sub(
-        lambda m: f"{m.group(0)[:3]}***@{m.group(0).split('@')[1]}", text
-    )
+    text = EMAIL_PATTERN.sub(lambda m: f"{m.group(0)[:3]}***@{m.group(0).split('@')[1]}", text)
 
     text = PHONE_PATTERN.sub(lambda m: f"{m.group(0)[:3]}***{m.group(0)[-2:]}", text)
 
@@ -35,9 +33,7 @@ def mask_pii(text: str) -> str:
 
 def safe_log(level: int, message: str, correlation_id: Optional[str] = None, **kwargs):
     masked_message = mask_pii(message)
-    masked_kwargs = {
-        k: mask_pii(str(v)) if isinstance(v, str) else v for k, v in kwargs.items()
-    }
+    masked_kwargs = {k: mask_pii(str(v)) if isinstance(v, str) else v for k, v in kwargs.items()}
 
     log_data = {"correlation_id": correlation_id, **masked_kwargs}
     logger.log(level, masked_message, extra=log_data)
@@ -79,6 +75,4 @@ def problem(
             instance=instance,
         )
 
-    return JSONResponse(
-        payload, status_code=status, headers={"X-Correlation-ID": correlation_id}
-    )
+    return JSONResponse(payload, status_code=status, headers={"X-Correlation-ID": correlation_id})
