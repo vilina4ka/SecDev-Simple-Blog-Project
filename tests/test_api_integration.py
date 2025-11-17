@@ -23,7 +23,7 @@ def test_login_success():
     client.post("/register", json={"username": "login_test", "password": "password123"})
 
     # Затем входим
-    resp = client.post("/login?username=login_test&password=password123")
+    resp = client.post("/login", json={"username": "login_test", "password": "password123"})
     assert resp.status_code == 200
 
     body = resp.json()
@@ -34,7 +34,7 @@ def test_login_success():
 
 def test_login_wrong_password():
     """Тест входа с неправильным паролем."""
-    resp = client.post("/login?username=nonexistent&password=wrong")
+    resp = client.post("/login", json={"username": "nonexistent", "password": "wrongpwd"})
     assert resp.status_code == 401
 
 
@@ -42,7 +42,7 @@ def test_create_post_authenticated():
     """Тест создания поста авторизованным пользователем."""
     # Регистрируем и получаем токен
     client.post("/register", json={"username": "post_creator", "password": "password123"})
-    login_resp = client.post("/login?username=post_creator&password=password123")
+    login_resp = client.post("/login", json={"username": "post_creator", "password": "password123"})
     token = login_resp.json()["access_token"]
 
     # Создаем пост
@@ -77,7 +77,7 @@ def test_get_user_posts():
     """Тест получения постов пользователя."""
     # Регистрируем и получаем токен
     client.post("/register", json={"username": "posts_viewer", "password": "password123"})
-    login_resp = client.post("/login?username=posts_viewer&password=password123")
+    login_resp = client.post("/login", json={"username": "posts_viewer", "password": "password123"})
     token = login_resp.json()["access_token"]
 
     # Создаем пост
@@ -112,7 +112,7 @@ def test_get_post_by_id():
     """Тест получения поста по ID."""
     # Регистрируем и получаем токен
     client.post("/register", json={"username": "post_getter", "password": "password123"})
-    login_resp = client.post("/login?username=post_getter&password=password123")
+    login_resp = client.post("/login", json={"username": "post_getter", "password": "password123"})
     token = login_resp.json()["access_token"]
 
     # Создаем пост
@@ -136,7 +136,7 @@ def test_update_own_post():
     """Тест обновления собственного поста."""
     # Регистрируем и получаем токен
     client.post("/register", json={"username": "post_updater", "password": "password123"})
-    login_resp = client.post("/login?username=post_updater&password=password123")
+    login_resp = client.post("/login", json={"username": "post_updater", "password": "password123"})
     token = login_resp.json()["access_token"]
 
     # Создаем пост
@@ -172,7 +172,7 @@ def test_update_other_user_post():
     client.post("/register", json={"username": "hacker_user", "password": "pass123"})
 
     # owner_user создает пост
-    owner_login = client.post("/login?username=owner_user&password=pass123")
+    owner_login = client.post("/login", json={"username": "owner_user", "password": "pass123"})
     owner_token = owner_login.json()["access_token"]
 
     post_data = {"title": "Owner Post", "body": "Content", "status": "draft"}
@@ -182,7 +182,7 @@ def test_update_other_user_post():
     post_id = create_resp.json()["id"]
 
     # hacker_user пытается обновить пост owner_user
-    hacker_login = client.post("/login?username=hacker_user&password=pass123")
+    hacker_login = client.post("/login", json={"username": "hacker_user", "password": "pass123"})
     hacker_token = hacker_login.json()["access_token"]
 
     update_data = {"title": "Hacked Title"}
@@ -198,7 +198,7 @@ def test_delete_own_post():
     """Тест удаления собственного поста."""
     # Регистрируем и получаем токен
     client.post("/register", json={"username": "post_deleter", "password": "password123"})
-    login_resp = client.post("/login?username=post_deleter&password=password123")
+    login_resp = client.post("/login", json={"username": "post_deleter", "password": "password123"})
     token = login_resp.json()["access_token"]
 
     # Создаем пост
@@ -221,7 +221,9 @@ def test_get_public_posts():
     """Тест получения публичных постов."""
     # Создаем опубликованный пост
     client.post("/register", json={"username": "public_poster", "password": "password123"})
-    login_resp = client.post("/login?username=public_poster&password=password123")
+    login_resp = client.post(
+        "/login", json={"username": "public_poster", "password": "password123"}
+    )
     token = login_resp.json()["access_token"]
 
     post_data = {

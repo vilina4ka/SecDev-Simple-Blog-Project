@@ -33,10 +33,41 @@ def mask_pii(text: str) -> str:
 
 def safe_log(level: int, message: str, correlation_id: Optional[str] = None, **kwargs):
     masked_message = mask_pii(message)
-    masked_kwargs = {k: mask_pii(str(v)) if isinstance(v, str) else v for k, v in kwargs.items()}
+    masked_kwargs = {}
 
-    log_data = {"correlation_id": correlation_id, **masked_kwargs}
-    logger.log(level, masked_message, extra=log_data)
+    # Список ключей, значения которых всегда должны маскироваться
+    sensitive_keys = {
+        "password",
+        "passwd",
+        "pwd",
+        "secret",
+        "token",
+        "key",
+        "jwt",
+        "access_token",
+        "refresh_token",
+        "username",
+    }
+
+    for key, value in kwargs.items():
+        if isinstance(value, str):
+            if key.lower() in sensitive_keys:
+                # Для чувствительных ключей всегда маскируем значение
+                masked_kwargs[key] = "***MASKED***"
+            else:
+                masked_kwargs[key] = mask_pii(value)
+        else:
+            masked_kwargs[key] = value
+
+    # Добавляем correlation_id в сообщение
+    cid = correlation_id or "N/A"
+    if masked_kwargs:
+        kwargs_str = ", ".join(f"{k}={v}" for k, v in masked_kwargs.items())
+        full_message = f"[correlation_id={cid}] - {masked_message} - {kwargs_str}"
+    else:
+        full_message = f"[correlation_id={cid}] - {masked_message}"
+
+    logger.log(level, full_message)
 
 
 def problem(
@@ -69,8 +100,9 @@ def problem(
     if log_error and status >= 500:
         safe_log(
             logging.ERROR,
-            f"Internal server error: {title}",
+            "Internal server error",
             correlation_id=correlation_id,
+            error_title=title,
             status=status,
             instance=instance,
         )

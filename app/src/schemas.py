@@ -1,5 +1,3 @@
-"""Pydantic схемы для валидации входных данных."""
-
 import unicodedata
 from typing import List, Optional
 
@@ -70,6 +68,21 @@ class UserRegister(BaseModel):
         if len(v) > 100:
             raise ValueError("password must be at most 100 characters")
         return v
+
+
+class UserLogin(BaseModel):
+    """Схема для входа пользователя."""
+
+    username: str = Field(
+        min_length=3,
+        max_length=50,
+        description="Имя пользователя (3-50 символов)",
+    )
+    password: str = Field(
+        min_length=6,
+        max_length=100,
+        description="Пароль (6-100 символов)",
+    )
 
 
 def validate_tag(tag: str) -> str:

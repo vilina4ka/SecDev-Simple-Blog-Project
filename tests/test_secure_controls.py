@@ -17,7 +17,7 @@ def test_rate_limit_ip_exceeded():
     _rate_limit_store.clear()
 
     for i in range(6):
-        resp = client.post("/login", params={"username": f"user{i}", "password": "wrong"})
+        resp = client.post("/login", json={"username": f"user{i}", "password": "wrongpwd"})
         if i < 5:
             assert resp.status_code == 401, f"Request {i} should be 401, got {resp.status_code}"
         else:
@@ -38,7 +38,7 @@ def test_rate_limit_account_exceeded():
     account_limit_hit = False
 
     for i in range(21):
-        resp = client.post("/login", params={"username": username, "password": "wrong"})
+        resp = client.post("/login", json={"username": username, "password": "wrongpwd"})
 
         if resp.status_code == 429:
             assert "Retry-After" in resp.headers
@@ -251,13 +251,13 @@ def test_rate_limit_reset_on_success():
 
     _rate_limit_store.clear()
     for _ in range(3):
-        resp = client.post("/login", params={"username": "admin_reset", "password": "wrong"})
+        resp = client.post("/login", json={"username": "admin_reset", "password": "wrongpwd"})
         assert resp.status_code == 401
 
-    resp = client.post("/login", params={"username": "admin_reset", "password": "password123"})
+    resp = client.post("/login", json={"username": "admin_reset", "password": "password123"})
     assert resp.status_code == 200
 
-    resp = client.post("/login", params={"username": "admin_reset", "password": "wrong"})
+    resp = client.post("/login", json={"username": "admin_reset", "password": "wrongpwd"})
     assert resp.status_code == 401
     assert resp.status_code != 429
 

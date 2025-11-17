@@ -1,11 +1,9 @@
-"""Rate limiting для защиты от brute-force атак (ADR-002, NFR-01, R1)."""
-
 import time
 from collections import defaultdict
 from typing import Dict, Optional, Tuple
 
 # In-memory хранилище для rate limiting (в production использовать Redis)
-_rate_limit_store: Dict[str, Dict[str, float]] = defaultdict(dict)
+_rate_limit_store: Dict[str, Dict[str, int]] = defaultdict(dict)
 
 # Конфигурация rate limits
 MAX_ATTEMPTS_PER_IP = 5  # Максимум попыток с одного IP
@@ -18,66 +16,43 @@ LOCKOUT_SECONDS = 1800  # Блокировка на 30 минут при пре�
 def check_rate_limit(
     identifier: str, max_attempts: int, window: int
 ) -> Tuple[bool, Optional[float]]:
-    """
-    Проверяет rate limit для идентификатора.
-
-    Args:
-        identifier: IP адрес или имя аккаунта
-        max_attempts: Максимальное количество попыток
-        window: Окно времени в секундах
-
-    Returns:
-        Tuple[bool, Optional[float]]: (разрешено, время до разблокировки в секундах или None)
-    """
     now = time.time()
+    now_str = str(int(now))  # Используем целое число как ключ
     key = f"{identifier}_{window}"
 
-    # Очищаем старые записи
     attempts = _rate_limit_store[key]
-    attempts_clean = {
-        timestamp: count for timestamp, count in attempts.items() if now - timestamp < window
-    }
+    attempts_clean: Dict[str, int] = {}
+    for timestamp_str, count in attempts.items():
+        timestamp = float(timestamp_str)
+        if now - timestamp < window:
+            attempts_clean[timestamp_str] = count
 
     # Подсчитываем попытки в окне
     total_attempts = sum(attempts_clean.values())
 
     if total_attempts >= max_attempts:
         # Вычисляем время до разблокировки
-        oldest_timestamp = min(attempts_clean.keys()) if attempts_clean else now
-        unlock_time = oldest_timestamp + window
-        retry_after = max(0, unlock_time - now)
+        if attempts_clean:
+            oldest_timestamp_str = min(attempts_clean.keys(), key=float)
+            oldest_timestamp = float(oldest_timestamp_str)
+            unlock_time = oldest_timestamp + window
+            retry_after = max(0, unlock_time - now)
+        else:
+            retry_after = window
         return False, retry_after
 
     # Записываем текущую попытку
-    attempts[now] = attempts.get(now, 0) + 1
+    attempts[now_str] = attempts.get(now_str, 0) + 1
     _rate_limit_store[key] = attempts
 
     return True, None
 
 
 def check_ip_rate_limit(ip: str) -> Tuple[bool, Optional[float]]:
-    """
-    Проверяет rate limit для IP адреса.
-
-    Args:
-        ip: IP адрес клиента
-
-    Returns:
-        Tuple[bool, Optional[float]]: (разрешено, время до разблокировки)
-    """
     return check_rate_limit(f"ip:{ip}", MAX_ATTEMPTS_PER_IP, WINDOW_SECONDS)
 
 
 def check_account_rate_limit(username: str) -> Tuple[bool, Optional[float]]:
-    """
-    Проверяет rate limit для аккаунта.
-
-    Args:
-        username: Имя пользователя
-
-    Returns:
-        Tuple[bool, Optional[float]]: (разрешено, время до разблокировки)
-    """
     return check_rate_limit(f"account:{username}", MAX_ATTEMPTS_PER_ACCOUNT, ACCOUNT_WINDOW_SECONDS)
 
 
