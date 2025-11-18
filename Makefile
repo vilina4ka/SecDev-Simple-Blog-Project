@@ -37,7 +37,7 @@ format: ## Format code
 	docker run --rm -v $(PWD):/app -w /app simple-blog-app:dev ruff format .
 
 docker-lint: ## Lint Dockerfile with Hadolint
-	docker run --rm -i hadolint/hadolint < Dockerfile
+	docker run --rm -v $(PWD):/workspace hadolint/hadolint hadolint --config /workspace/.hadolint.yaml /workspace/Dockerfile
 
 image-scan: ## Scan image for vulnerabilities with Trivy
 	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
