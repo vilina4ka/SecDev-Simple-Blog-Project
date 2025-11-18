@@ -50,3 +50,96 @@ jobs:
 
       - name: Pre-commit (all files)
         run: pre-commit run --all-files
+
+  container-security:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Docker Lint (Hadolint)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          config: .hadolint.yaml
+
+      - name: Build Docker image
+        run: docker build -t simple-blog-app:latest .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'image'
+          scan-ref: 'simple-blog-app:latest'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Generate SBOM
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            -v ${{ github.workspace }}:/workspace \
+            aquasec/trivy:latest image \
+            --format spdx-json \
+            --output /workspace/sbom.json \
+            simple-blog-app:latest
+
+      - name: Upload SBOM as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.json
+
+  container-test:
+    runs-on: ubuntu-latest
+    needs: container-security
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and test container
+        run: |
+          docker build -t simple-blog-app:test .
+          docker run -d --name test-app -p 8000:8000 simple-blog-app:test
+          sleep 10
+
+          # Check if container is running as non-root
+          USER_ID=$(docker exec test-app id -u)
+          if [ "$USER_ID" -eq 0 ]; then
+            echo "ERROR: Container is running as root user!"
+            exit 1
+          fi
+
+          # Check health endpoint
+          HEALTH_STATUS=$(curl -f -s -o /dev/null -w "%{http_code}" http://localhost:8000/health)
+          if [ "$HEALTH_STATUS" -ne 200 ]; then
+            echo "ERROR: Health check failed with status $HEALTH_STATUS"
+            docker logs test-app
+            exit 1
+          fi
+
+          # Check container health status
+          CONTAINER_HEALTH=$(docker inspect test-app --format='{{.State.Health.Status}}')
+          if [ "$CONTAINER_HEALTH" != "healthy" ]; then
+            echo "ERROR: Container is not healthy. Status: $CONTAINER_HEALTH"
+            docker logs test-app
+            exit 1
+          fi
+
+          echo "Container security and health checks passed"
+
+      - name: Show container info
+        run: |
+          echo "Container user ID: $(docker exec test-app id -u)"
+          echo "Container health status: $(docker inspect test-app --format='{{.State.Health.Status}}')"
+          docker images simple-blog-app:test
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop test-app || true
+          docker rm test-app || true

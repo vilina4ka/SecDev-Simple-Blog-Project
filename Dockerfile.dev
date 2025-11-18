@@ -1,0 +1,20 @@
+# syntax=docker/dockerfile:1
+
+FROM python:3.11-alpine AS development
+
+RUN apk add --no-cache build-base curl git && \
+    addgroup -g 1001 -S devgroup && \
+    adduser -u 1001 -S devuser -G devgroup
+
+WORKDIR /app
+COPY requirements.txt requirements-dev.txt ./
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
+
+COPY --chown=devuser:devuser . .
+
+USER devuser
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

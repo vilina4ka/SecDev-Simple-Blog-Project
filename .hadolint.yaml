@@ -1,0 +1,23 @@
+ignored:
+  - DL3008  
+  - DL3013 
+  - DL3025  
+  - SC1091  
+
+trustedRegistries:
+  - docker.io
+
+label-schema:
+  maintained: "true"
+  author: "Simple Blog Project"
+  description: "FastAPI application with security controls"
+
+rules:
+  DL3007:
+    allowedBaseImages:
+      - "python:3.11-alpine"
+
+  DL3042:
+    allowedCommands:
+      - "pip install"
+      - "python -m pip install"

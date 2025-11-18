@@ -1,6 +1,6 @@
 # Быстрый старт проекта P06
 
-## 🚀 Установка и запуск
+## Установка и запуск
 
 ```bash
 # Создать виртуальное окружение
@@ -16,7 +16,7 @@ uvicorn app.main:app --reload
 
 **API документация:** http://127.0.0.1:8000/docs
 
-## 📋 API Эндпоинты
+## API Эндпоинты
 
 ### Аутентификация
 - `POST /register` — регистрация пользователя
@@ -33,7 +33,7 @@ uvicorn app.main:app --reload
 - `GET /posts/public` — опубликованные посты всех пользователей
 - `GET /health` — проверка работоспособности
 
-## 🔐 Работа с API
+## Работа с API
 
 ### 1. Регистрация и вход
 ```bash
@@ -69,7 +69,7 @@ curl -X DELETE http://127.0.0.1:8000/posts/1 \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-## 🧪 Тестирование
+## Тестирование
 
 ```bash
 # Все тесты
@@ -82,18 +82,62 @@ pytest tests/test_p06_secure_controls.py -v
 pytest --cov=app --cov-report=term-missing
 ```
 
-## 🐳 Docker
+## Docker (P07)
 
+### Production запуск
 ```bash
-# Сборка и запуск
-docker build -t secdev-blog .
-docker run -p 8000:8000 secdev-blog
+# Сборка и запуск production контейнера
+make build
+make up
 
-# Или через compose
-docker compose up --build
+# Или напрямую
+docker compose --profile production up -d
 ```
 
-## ✨ Quality Gate
+### Development режим
+```bash
+# Development с hot-reload
+make dev
+
+# Или напрямую
+docker compose --profile dev up
+```
+
+### Проверка работоспособности
+```bash
+# Health check
+curl http://localhost:8000/health
+# {"status": "ok"}
+
+# API документация
+open http://localhost:8000/docs
+```
+
+### Security проверки
+```bash
+# Линтинг Dockerfile
+make docker-lint
+
+# Сканирование уязвимостей
+make image-scan
+
+# Проверка пользователя
+docker exec $(docker ps -q) id -u  # Должен вернуть 1000
+```
+
+### Дополнительные команды
+```bash
+# Просмотр логов
+make logs
+
+# Очистка
+make clean
+
+# Все доступные команды
+make help
+```
+
+## Quality Gate
 
 ```bash
 # Проверка кода
