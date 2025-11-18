@@ -64,6 +64,26 @@ pre-commit install
 uvicorn app.main:app --reload
 ```
 
+## JWT Аутентификация
+
+Проект поддерживает JWT токены для аутентификации:
+
+**Установка PyJWT:**
+```bash
+pip install PyJWT==2.8.0
+```
+
+**Использование:**
+1. `POST /login` → получает JWT токен (TTL: 1 час)
+2. `Authorization: Bearer <token>` в заголовках запросов
+
+**Пример:**
+```bash
+curl -X POST "http://127.0.0.1:8000/login?username=admin&password=password123"
+
+curl -H "Authorization: Bearer eyJ..." http://127.0.0.1:8000/posts
+```
+
 ---
 
 ## Доменные сценарии

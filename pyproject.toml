@@ -1,9 +1,48 @@
 [tool.ruff]
 line-length = 100
-select = ["E","F","W","I"]
 target-version = "py311"
 exclude = ["venv",".venv","build","dist"]
+
+[tool.ruff.lint]
+select = ["E","F","W","I"]
 
 [tool.isort]
 profile = "black"
 line_length = 100
+
+[tool.bandit]
+exclude_dirs = ["venv", ".venv", "build", "dist", "tests"]
+skips = ["B101"]  # Skip assert_used (ok in tests)
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+exclude = ["venv", ".venv", "build", "dist"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+# Coverage опции можно добавить в CI или запускать вручную:
+# pytest --cov=app --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=80
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["*/tests/*", "*/__pycache__/*", "*/venv/*", "*/.venv/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+[tool.black]
+line-length = 100

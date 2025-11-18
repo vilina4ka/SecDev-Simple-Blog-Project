@@ -31,8 +31,22 @@ jobs:
           black --check .
           isort --check-only .
 
-      - name: Tests
-        run: pytest -q
+      - name: Type checking (mypy)
+        run: mypy app/ || true  # Пока не блокируем, но проверяем
+
+      - name: Security linting (bandit)
+        run: bandit -r app/ -f json -o bandit-report.json || true  # Пока не блокируем, но проверяем
+
+      - name: Tests with coverage (quality gate ≥ 80%)
+        run: |
+          pytest --cov=app --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=80
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
 
       - name: Pre-commit (all files)
         run: pre-commit run --all-files
