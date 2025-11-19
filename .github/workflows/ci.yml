@@ -74,28 +74,18 @@ jobs:
           docker inspect simple-blog-app:latest | head -20
 
       - name: Run Trivy vulnerability scanner
-        run: |
-          echo "Running Trivy scan..."
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-            -v ${{ github.workspace }}:/workspace \
-            aquasecurity/trivy:latest image \
-            --format sarif \
-            --output /workspace/trivy-results.sarif \
-            simple-blog-app:latest
+        uses: aquasecurity/trivy-action@0.28.0
         continue-on-error: true
+        with:
+          scan-type: 'image'
+          image-ref: 'simple-blog-app:latest'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
 
-      - name: Debug Trivy execution
+      - name: Ensure SARIF file exists
         run: |
-          echo "Current directory contents:"
-          ls -la
-          echo "Checking for trivy-results.sarif:"
-          if [ -f trivy-results.sarif ]; then
-            echo "✅ File exists!"
-            ls -la trivy-results.sarif
-            head -10 trivy-results.sarif
-          else
-            echo "❌ File does not exist"
-            echo "Creating minimal SARIF file..."
+          if [ ! -f trivy-results.sarif ]; then
+            echo "Creating minimal SARIF file for upload..."
             cat > trivy-results.sarif << 'EOF'
           {
             "version": "2.1.0",
@@ -104,6 +94,8 @@ jobs:
           }
           EOF
           fi
+          echo "SARIF file ready for upload"
+          ls -la trivy-results.sarif
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
