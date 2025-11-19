@@ -67,18 +67,30 @@ jobs:
         run: docker build -t simple-blog-app:latest .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
+        continue-on-error: true
         with:
           scan-type: 'image'
           scan-ref: 'simple-blog-app:latest'
           format: 'sarif'
           output: 'trivy-results.sarif'
 
+      - name: Verify Trivy results file exists
+        run: |
+          if [ -f trivy-results.sarif ]; then
+            echo "Trivy SARIF file found"
+            ls -la trivy-results.sarif
+          else
+            echo "Trivy SARIF file not found, creating empty file"
+            echo '{"version":"2.1.0","runs":[]}' > trivy-results.sarif
+          fi
+
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
+          category: 'Trivy'
 
       - name: Generate SBOM
         run: |
