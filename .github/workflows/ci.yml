@@ -66,36 +66,19 @@ jobs:
       - name: Build Docker image
         run: docker build -t simple-blog-app:latest .
 
-      - name: Verify Docker image exists
+      - name: Install Trivy and scan
         run: |
-          echo "Checking if Docker image exists..."
-          docker images simple-blog-app:latest
-          echo "Docker image info:"
-          docker inspect simple-blog-app:latest | head -20
+          # Устанавливаем Trivy
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.28.0
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0
+          # Сканируем образ и сохраняем в SARIF формате
+          trivy image --format sarif --output trivy-results.sarif simple-blog-app:latest
+
+          echo "SARIF file created:"
+          ls -la trivy-results.sarif
+          echo "First 10 lines:"
+          head -10 trivy-results.sarif
         continue-on-error: true
-        with:
-          scan-type: 'image'
-          image-ref: 'simple-blog-app:latest'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          timeout: '10m'
-
-      - name: Check SARIF file
-        run: |
-          echo "Checking SARIF file..."
-          if [ -f trivy-results.sarif ]; then
-            echo "SARIF file exists, size: $(wc -l < trivy-results.sarif) lines"
-            if [ ! -s trivy-results.sarif ]; then
-              echo "SARIF file is empty, creating minimal version..."
-              printf '{"version":"2.1.0","$schema":"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json","runs":[]}' > trivy-results.sarif
-            fi
-          else
-            echo "SARIF file not found, creating minimal version..."
-            printf '{"version":"2.1.0","$schema":"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json","runs":[]}' > trivy-results.sarif
-          fi
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
@@ -106,12 +89,7 @@ jobs:
 
       - name: Generate SBOM
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-            -v ${{ github.workspace }}:/workspace \
-            aquasec/trivy:latest image \
-            --format spdx-json \
-            --output /workspace/sbom.json \
-            simple-blog-app:latest
+          trivy image --format spdx-json --output sbom.json simple-blog-app:latest
 
       - name: Upload SBOM as artifact
         uses: actions/upload-artifact@v4
