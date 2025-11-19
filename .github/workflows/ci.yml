@@ -66,23 +66,43 @@ jobs:
       - name: Build Docker image
         run: docker build -t simple-blog-app:latest .
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0
-        continue-on-error: true
-        with:
-          scan-type: 'image'
-          scan-ref: 'simple-blog-app:latest'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: Verify Trivy results file exists
+      - name: Verify Docker image exists
         run: |
+          echo "Checking if Docker image exists..."
+          docker images simple-blog-app:latest
+          echo "Docker image info:"
+          docker inspect simple-blog-app:latest | head -20
+
+      - name: Run Trivy vulnerability scanner
+        run: |
+          echo "Running Trivy scan..."
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            -v ${{ github.workspace }}:/workspace \
+            aquasecurity/trivy:latest image \
+            --format sarif \
+            --output /workspace/trivy-results.sarif \
+            simple-blog-app:latest
+        continue-on-error: true
+
+      - name: Debug Trivy execution
+        run: |
+          echo "Current directory contents:"
+          ls -la
+          echo "Checking for trivy-results.sarif:"
           if [ -f trivy-results.sarif ]; then
-            echo "Trivy SARIF file found"
+            echo "✅ File exists!"
             ls -la trivy-results.sarif
+            head -10 trivy-results.sarif
           else
-            echo "Trivy SARIF file not found, creating empty file"
-            echo '{"version":"2.1.0","runs":[]}' > trivy-results.sarif
+            echo "❌ File does not exist"
+            echo "Creating minimal SARIF file..."
+            cat > trivy-results.sarif << 'EOF'
+          {
+            "version": "2.1.0",
+            "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+            "runs": []
+          }
+          EOF
           fi
 
       - name: Upload Trivy scan results to GitHub Security tab
