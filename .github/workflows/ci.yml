@@ -81,21 +81,21 @@ jobs:
           image-ref: 'simple-blog-app:latest'
           format: 'sarif'
           output: 'trivy-results.sarif'
+          timeout: '10m'
 
-      - name: Ensure SARIF file exists
+      - name: Check SARIF file
         run: |
-          if [ ! -f trivy-results.sarif ]; then
-            echo "Creating minimal SARIF file for upload..."
-            cat > trivy-results.sarif << 'EOF'
-          {
-            "version": "2.1.0",
-            "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
-            "runs": []
-          }
-          EOF
+          echo "Checking SARIF file..."
+          if [ -f trivy-results.sarif ]; then
+            echo "SARIF file exists, size: $(wc -l < trivy-results.sarif) lines"
+            if [ ! -s trivy-results.sarif ]; then
+              echo "SARIF file is empty, creating minimal version..."
+              printf '{"version":"2.1.0","$schema":"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json","runs":[]}' > trivy-results.sarif
+            fi
+          else
+            echo "SARIF file not found, creating minimal version..."
+            printf '{"version":"2.1.0","$schema":"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json","runs":[]}' > trivy-results.sarif
           fi
-          echo "SARIF file ready for upload"
-          ls -la trivy-results.sarif
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
