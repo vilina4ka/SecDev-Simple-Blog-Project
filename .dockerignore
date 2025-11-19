@@ -57,6 +57,7 @@ conftest.py
 
 # Development dependencies
 # requirements-dev.txt  # Раскомментировать если нужно игнорировать
+requirements-dev.txt
 
 # Docker
 Dockerfile*
