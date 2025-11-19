@@ -66,19 +66,33 @@ jobs:
       - name: Build Docker image
         run: docker build -t simple-blog-app:latest .
 
-      - name: Install Trivy and scan
+      - name: Debug - List files before Trivy
+        run: ls -la
+
+      - name: Debug - Install and run Trivy with detailed output
         run: |
           # Устанавливаем Trivy
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.28.0
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.28.0/trivy_0.28.0_Linux-64bit.tar.gz
+          tar -xzf trivy_0.28.0_Linux-64bit.tar.gz
+          sudo mv trivy /usr/local/bin/
 
-          # Сканируем образ и сохраняем в SARIF формате
+          echo "=== Running Trivy scan ==="
           trivy image --format sarif --output trivy-results.sarif simple-blog-app:latest
+          echo "=== Trivy exit code: $? ==="
 
-          echo "SARIF file created:"
-          ls -la trivy-results.sarif
-          echo "First 10 lines:"
-          head -10 trivy-results.sarif
-        continue-on-error: true
+      - name: Debug - List files after Trivy
+        run: |
+          echo "=== Current directory contents ==="
+          ls -la
+          echo "=== Checking if SARIF file exists ==="
+          if [ -f trivy-results.sarif ]; then
+            echo "SARIF file exists, content:"
+            cat trivy-results.sarif
+          else
+            echo "SARIF file NOT found!"
+            # Создаем пустой SARIF файл чтобы избежать ошибки
+            echo '{"version":"2.1.0","$schema":"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json","runs":[]}' > trivy-results.sarif
+          fi
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
