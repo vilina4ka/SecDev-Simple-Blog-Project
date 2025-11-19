@@ -50,9 +50,9 @@ ENV PYTHONUNBUFFERED=1 \
 COPY --chown=appuser:appgroup app/ ./app/
 
 # Final cleanup of Python cache in venv
-RUN find /opt/venv -name "*.pyc" -delete && \
-    find /opt/venv -name "__pycache__" -type d -exec rm -rf {} + || true && \
-    find /opt/venv -name "*.pyo" -delete || true
+RUN find /opt/venv -name "*.pyc" -delete; \
+    find /opt/venv -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /opt/venv -name "*.pyo" -delete 2>/dev/null || true
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f --max-time 5 http://localhost:8000/health || exit 1
