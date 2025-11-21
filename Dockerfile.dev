@@ -1,0 +1,24 @@
+# syntax=docker/dockerfile:1
+
+FROM python:3.11-slim AS development
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/* && \
+    groupadd -g 1001 devgroup && \
+    useradd -u 1001 -g devgroup -s /bin/bash -m devuser
+
+WORKDIR /app
+COPY requirements.txt requirements-dev.txt ./
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
+
+COPY --chown=devuser:devuser . .
+
+USER devuser
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
