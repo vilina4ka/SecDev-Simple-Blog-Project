@@ -97,7 +97,7 @@ jobs:
   deploy-staging:
     runs-on: ubuntu-latest
     needs: [test, security]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.event_name == 'push'
     environment: staging
     steps:
       - name: Checkout
@@ -105,10 +105,10 @@ jobs:
 
       - name: Mock deployment to staging
         run: |
-          echo "🚀 Deploying to staging environment..."
+          echo "Deploying to staging environment"
           echo "Environment: staging"
           echo "Branch: ${{ github.ref }}"
           echo "SHA: ${{ github.sha }}"
-          echo "Database URL: ${{ secrets.STAGING_DB_URL }}"
-          echo "JWT Secret: ${{ secrets.STAGING_JWT_SECRET }}"
-          echo "✅ Staging deployment completed (mock)"
+          echo "Database URL configured: ${{ secrets.STAGING_DB_URL != '' && 'true' || 'false' }}"
+          echo "JWT Secret configured: ${{ secrets.STAGING_JWT_SECRET != '' && 'true' || 'false' }}"
+          echo "Staging deployment completed (mock)"
