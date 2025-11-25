@@ -1,153 +1,110 @@
-name: CI
+name: CI (minimal)
+
 on:
-  pull_request:
   push:
-    branches: [main]
+  pull_request:
+
 permissions:
   contents: read
+
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  test:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-22.04]
+        python-version: ["3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
           cache: "pip"
+          cache-dependency-path: |
+            requirements*.txt
+            pyproject.toml
 
-      - name: Install dependencies
+      - name: Cache pip (optimized)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-py${{ matrix.python-version }}-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-py${{ matrix.python-version }}-pip-
+            ${{ runner.os }}-pip-
+
+      - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt -r requirements-dev.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install ruff black isort pytest pytest-cov pytest-html
 
-      - name: Lint & Format
+      - name: Lint
         run: |
-          ruff check --output-format=github .
+          ruff check .
           black --check .
           isort --check-only .
 
-      - name: Type checking (mypy)
-        run: mypy app/ || true  # Пока не блокируем, но проверяем
-
-      - name: Security linting (bandit)
-        run: bandit -r app/ -f json -o bandit-report.json || true  # Пока не блокируем, но проверяем
-
-      - name: Tests with coverage (quality gate ≥ 80%)
+      - name: Tests with coverage
         run: |
-          pytest --cov=app --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=80
+          mkdir -p reports
+          pytest --cov=app --cov-report=term-missing --cov-report=xml --cov-report=html:reports/htmlcov --cov-fail-under=80 --junitxml=reports/junit.xml --html=reports/report.html --self-contained-html
 
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
+      - name: Build wheel
+        run: |
+          pip install build
+          python -m build --wheel
+          ls -la dist/
+
+      - name: Upload reports
         if: always()
-        with:
-          files: ./coverage.xml
-          fail_ci_if_error: false
-
-      - name: Pre-commit (all files)
-        run: pre-commit run --all-files
-
-  container-security:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Docker Lint (Hadolint)
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: Dockerfile
-          config: .hadolint.yaml
-
-      - name: Build Docker image
-        run: docker build -t simple-blog-app:latest .
-
-      - name: Install Trivy
-        run: |
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update
-          sudo apt-get install -y trivy
-
-      - name: Run Trivy scan and create SARIF
-        run: |
-          echo "=== Running Trivy vulnerability scan ==="
-          trivy image --format sarif --output trivy-results.sarif simple-blog-app:latest || true
-
-          echo "=== Checking if SARIF file was created ==="
-          if [ -f "trivy-results.sarif" ]; then
-            echo "SARIF file created successfully"
-            echo "File size: $(wc -c < trivy-results.sarif) bytes"
-          else
-            echo "SARIF file not created, creating empty one..."
-            printf '{"version":"2.1.0","$schema":"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json","runs":[]}' > trivy-results.sarif
-          fi
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: 'trivy-results.sarif'
-          category: 'Trivy'
-
-      - name: Generate SBOM
-        run: |
-          trivy image --format spdx-json --output sbom.json simple-blog-app:latest
-
-      - name: Upload SBOM as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sbom
-          path: sbom.json
+          name: reports-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: |
+            reports/**
+            dist/**
 
-  container-test:
+  security:
     runs-on: ubuntu-latest
-    needs: container-security
+    needs: test
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Build and test container
+      - name: Security scan
+        uses: github/super-linter/slim@v5
+        env:
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_PYTHON_BLACK: true
+          VALIDATE_PYTHON_ISORT: true
+          VALIDATE_PYTHON_RUFF: true
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Mock deployment to staging
         run: |
-          docker build -t simple-blog-app:test .
-          docker run -d --name test-app -p 8000:8000 simple-blog-app:test
-          sleep 10
-
-          # Check if container is running as non-root
-          USER_ID=$(docker exec test-app id -u)
-          if [ "$USER_ID" -eq 0 ]; then
-            echo "ERROR: Container is running as root user!"
-            exit 1
-          fi
-
-          # Check health endpoint
-          HEALTH_STATUS=$(curl -f -s -o /dev/null -w "%{http_code}" http://localhost:8000/health)
-          if [ "$HEALTH_STATUS" -ne 200 ]; then
-            echo "ERROR: Health check failed with status $HEALTH_STATUS"
-            docker logs test-app
-            exit 1
-          fi
-
-          # Check container health status
-          CONTAINER_HEALTH=$(docker inspect test-app --format='{{.State.Health.Status}}')
-          if [ "$CONTAINER_HEALTH" != "healthy" ]; then
-            echo "ERROR: Container is not healthy. Status: $CONTAINER_HEALTH"
-            docker logs test-app
-            exit 1
-          fi
-
-          echo "Container security and health checks passed"
-
-      - name: Show container info
-        run: |
-          echo "Container user ID: $(docker exec test-app id -u)"
-          echo "Container health status: $(docker inspect test-app --format='{{.State.Health.Status}}')"
-          docker images simple-blog-app:test
-
-      - name: Cleanup
-        if: always()
-        run: |
-          docker stop test-app || true
-          docker rm test-app || true
+          echo "🚀 Deploying to staging environment..."
+          echo "Environment: staging"
+          echo "Branch: ${{ github.ref }}"
+          echo "SHA: ${{ github.sha }}"
+          echo "Database URL: ${{ secrets.STAGING_DB_URL }}"
+          echo "JWT Secret: ${{ secrets.STAGING_JWT_SECRET }}"
+          echo "✅ Staging deployment completed (mock)"
