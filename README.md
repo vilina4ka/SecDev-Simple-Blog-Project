@@ -1,5 +1,7 @@
 # SecDev Course — Simple Blog Project
 
+![CI](https://github.com/vilina4ka/Secdev-Simple-Blog-Project/actions/workflows/ci.yml/badge.svg)
+
 ## Описание проекта
 **Simple Blog** — веб-приложение на **FastAPI**, реализующее приватный блог с безопасным доступом.
 После входа пользователь может:

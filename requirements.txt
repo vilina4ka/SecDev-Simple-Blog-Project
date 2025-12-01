@@ -3,3 +3,4 @@ uvicorn[standard]>=0.20.0
 pydantic>=2.0.0
 PyJWT>=2.0.0
 starlette>=0.40.0
+httpx>=0.25.0

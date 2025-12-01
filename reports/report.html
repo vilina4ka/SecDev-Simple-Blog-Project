@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title id="head-title">report.html</title>
+      <style type="text/css">body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  /* do not increase min-width as some may use split screens */
+  min-width: 800px;
+  color: #999;
+}
+
+h1 {
+  font-size: 24px;
+  color: black;
+}
+
+h2 {
+  font-size: 16px;
+  color: black;
+}
+
+p {
+  color: black;
+}
+
+a {
+  color: #999;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/******************************
+ * SUMMARY INFORMATION
+ ******************************/
+#environment td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  vertical-align: top;
+}
+#environment tr:nth-child(odd) {
+  background-color: #f6f6f6;
+}
+#environment ul {
+  margin: 0;
+  padding: 0 20px;
+}
+
+/******************************
+ * TEST RESULT COLORS
+ ******************************/
+span.passed,
+.passed .col-result {
+  color: green;
+}
+
+span.skipped,
+span.xfailed,
+span.rerun,
+.skipped .col-result,
+.xfailed .col-result,
+.rerun .col-result {
+  color: orange;
+}
+
+span.error,
+span.failed,
+span.xpassed,
+.error .col-result,
+.failed .col-result,
+.xpassed .col-result {
+  color: red;
+}
+
+.col-links__extra {
+  margin-right: 3px;
+}
+
+/******************************
+ * RESULTS TABLE
+ *
+ * 1. Table Layout
+ * 2. Extra
+ * 3. Sorting items
+ *
+ ******************************/
+/*------------------
+ * 1. Table Layout
+ *------------------*/
+#results-table {
+  border: 1px solid #e6e6e6;
+  color: #999;
+  font-size: 12px;
+  width: 100%;
+}
+#results-table th,
+#results-table td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  text-align: left;
+}
+#results-table th {
+  font-weight: bold;
+}
+
+/*------------------
+ * 2. Extra
+ *------------------*/
+.logwrapper {
+  max-height: 230px;
+  overflow-y: scroll;
+  background-color: #e6e6e6;
+}
+.logwrapper.expanded {
+  max-height: none;
+}
+.logwrapper.expanded .logexpander:after {
+  content: "collapse [-]";
+}
+.logwrapper .logexpander {
+  z-index: 1;
+  position: sticky;
+  top: 10px;
+  width: max-content;
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 5px 7px;
+  margin: 10px 0 10px calc(100% - 80px);
+  cursor: pointer;
+  background-color: #e6e6e6;
+}
+.logwrapper .logexpander:after {
+  content: "expand [+]";
+}
+.logwrapper .logexpander:hover {
+  color: #000;
+  border-color: #000;
+}
+.logwrapper .log {
+  min-height: 40px;
+  position: relative;
+  top: -50px;
+  height: calc(100% + 50px);
+  border: 1px solid #e6e6e6;
+  color: black;
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  padding: 5px;
+  padding-right: 80px;
+  white-space: pre-wrap;
+}
+
+div.media {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin: 0 5px;
+  overflow: hidden;
+  width: 320px;
+}
+
+.media-container {
+  display: grid;
+  grid-template-columns: 25px auto 25px;
+  align-items: center;
+  flex: 1 1;
+  overflow: hidden;
+  height: 200px;
+}
+
+.media-container--fullscreen {
+  grid-template-columns: 0px auto 0px;
+}
+
+.media-container__nav--right,
+.media-container__nav--left {
+  text-align: center;
+  cursor: pointer;
+}
+
+.media-container__viewport {
+  cursor: pointer;
+  text-align: center;
+  height: inherit;
+}
+.media-container__viewport img,
+.media-container__viewport video {
+  object-fit: cover;
+  width: 100%;
+  max-height: 100%;
+}
+
+.media__name,
+.media__counter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  flex: 0 0 25px;
+  align-items: center;
+}
+
+.collapsible td:not(.col-links) {
+  cursor: pointer;
+}
+.collapsible td:not(.col-links):hover::after {
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.col-result {
+  width: 130px;
+}
+.col-result:hover::after {
+  content: " (hide details)";
+}
+
+.col-result.collapsed:hover::after {
+  content: " (show details)";
+}
+
+#environment-header h2:hover::after {
+  content: " (hide details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#environment-header.collapsed h2:hover::after {
+  content: " (show details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/*------------------
+ * 3. Sorting items
+ *------------------*/
+.sortable {
+  cursor: pointer;
+}
+.sortable.desc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: -12.5px;
+  border: 10px solid #4caf50;
+  border-bottom: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+.sortable.asc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: 12.5px;
+  border: 10px solid #4caf50;
+  border-top: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+.hidden, .summary__reload__button.hidden {
+  display: none;
+}
+
+.summary__data {
+  flex: 0 0 550px;
+}
+.summary__reload {
+  flex: 1 1;
+  display: flex;
+  justify-content: center;
+}
+.summary__reload__button {
+  flex: 0 0 300px;
+  display: flex;
+  color: white;
+  font-weight: bold;
+  background-color: #4caf50;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.summary__reload__button:hover {
+  background-color: #46a049;
+}
+.summary__spacer {
+  flex: 0 0 550px;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+}
+
+.filters,
+.collapse {
+  display: flex;
+  align-items: center;
+}
+.filters button,
+.collapse button {
+  color: #999;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.filters button:hover,
+.collapse button:hover {
+  color: #ccc;
+}
+
+.filter__label {
+  margin-right: 10px;
+}
+
+      </style>
+
+  </head>
+  <body>
+    <h1 id="title">report.html</h1>
+    <p>Report generated on 26-Nov-2025 at 01:42:39 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a>
+        v4.1.1</p>
+    <div id="environment-header">
+      <h2>Environment</h2>
+    </div>
+    <table id="environment"></table>
+    <!-- TEMPLATES -->
+      <template id="template_environment_row">
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+    </template>
+    <template id="template_results-table__body--empty">
+      <tbody class="results-table-row">
+        <tr id="not-found-message">
+          <td colspan="4">No results found. Check the filters.</th>
+        </tr>
+    </template>
+    <template id="template_results-table__tbody">
+      <tbody class="results-table-row">
+        <tr class="collapsible">
+        </tr>
+        <tr class="extras-row">
+          <td class="extra" colspan="4">
+            <div class="extraHTML"></div>
+            <div class="media">
+              <div class="media-container">
+                  <div class="media-container__nav--left"><</div>
+                  <div class="media-container__viewport">
+                    <img src="" />
+                    <video controls>
+                      <source src="" type="video/mp4">
+                    </video>
+                  </div>
+                  <div class="media-container__nav--right">></div>
+                </div>
+                <div class="media__name"></div>
+                <div class="media__counter"></div>
+            </div>
+            <div class="logwrapper">
+              <div class="logexpander"></div>
+              <div class="log"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </template>
+    <!-- END TEMPLATES -->
+    <div class="summary">
+      <div class="summary__data">
+        <h2>Summary</h2>
+        <div class="additional-summary prefix">
+        </div>
+        <p class="run-count">84 tests took 259 ms.</p>
+        <p class="filter">(Un)check the boxes to filter the results.</p>
+        <div class="summary__reload">
+          <div class="summary__reload__button hidden" onclick="location.reload()">
+            <div>There are still tests running. <br />Reload this page to get the latest results!</div>
+          </div>
+        </div>
+        <div class="summary__spacer"></div>
+        <div class="controls">
+          <div class="filters">
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="failed" disabled/>
+            <span class="failed">0 Failed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="passed" />
+            <span class="passed">84 Passed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="skipped" disabled/>
+            <span class="skipped">0 Skipped,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xfailed" disabled/>
+            <span class="xfailed">0 Expected failures,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xpassed" disabled/>
+            <span class="xpassed">0 Unexpected passes,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="error" disabled/>
+            <span class="error">0 Errors,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="rerun" disabled/>
+            <span class="rerun">0 Reruns</span>
+          </div>
+          <div class="collapse">
+            <button id="show_all_details">Show all details</button>&nbsp;/&nbsp;<button id="hide_all_details">Hide all details</button>
+          </div>
+        </div>
+      </div>
+      <div class="additional-summary summary">
+      </div>
+      <div class="additional-summary postfix">
+      </div>
+    </div>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable" data-column-type="result">Result</th>
+          <th class="sortable" data-column-type="testId">Test</th>
+          <th class="sortable" data-column-type="duration">Duration</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+    </table>
+  </body>
+  <footer>
+    <div id="data-container" data-jsonblob="{&#34;environment&#34;: {&#34;Python&#34;: &#34;3.13.7&#34;, &#34;Platform&#34;: &#34;macOS-14.4-arm64-arm-64bit-Mach-O&#34;, &#34;Packages&#34;: {&#34;pytest&#34;: &#34;8.2.2&#34;, &#34;pluggy&#34;: &#34;1.6.0&#34;}, &#34;Plugins&#34;: {&#34;cov&#34;: &#34;5.0.0&#34;, &#34;asyncio&#34;: &#34;1.2.0&#34;, &#34;anyio&#34;: &#34;4.11.0&#34;, &#34;html&#34;: &#34;4.1.1&#34;, &#34;metadata&#34;: &#34;3.1.1&#34;}}, &#34;tests&#34;: {&#34;tests/test_api_integration.py::test_register_user&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api_integration.py::test_register_user&#34;, &#34;duration&#34;: &#34;13 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api_integration.py::test_register_user&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;13 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,872 - app.src.rfc7807_handler - INFO - [correlation_id=e2cebb5f-2b05-4e8d-8d51-92f83d7c9e85] - User registered successfully - username=***MASKED***, password=***MASKED***\n2025-11-26 01:42:38,872 - app.src.rfc7807_handler - INFO - [correlation_id=e2cebb5f-2b05-4e8d-8d51-92f83d7c9e85] - HTTP request - method=POST, url=http://testserver/register, status_code=200\n2025-11-26 01:42:38,873 - httpx - INFO - HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=e2cebb5f-2b05-4e8d-8d51-92f83d7c9e85] - User registered successfully - username=***MASKED***, password=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=e2cebb5f-2b05-4e8d-8d51-92f83d7c9e85] - HTTP request - method=POST, url=http://testserver/register, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n&#34;}], &#34;tests/test_api_integration.py::test_login_success&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api_integration.py::test_login_success&#34;, &#34;duration&#34;: &#34;5 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api_integration.py::test_login_success&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;5 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,881 - app.src.rfc7807_handler - INFO - [correlation_id=5cbe361d-a767-4919-b49b-a50df02dcffc] - User registered successfully - username=***MASKED***, password=***MASKED***\n2025-11-26 01:42:38,881 - app.src.rfc7807_handler - INFO - [correlation_id=5cbe361d-a767-4919-b49b-a50df02dcffc] - HTTP request - method=POST, url=http://testserver/register, status_code=200\n2025-11-26 01:42:38,882 - httpx - INFO - HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,883 - app.src.rfc7807_handler - INFO - [correlation_id=a650b339-5fa6-49c1-b3ce-096b0ef2f438] - Successful login for user - username=***MASKED***\n2025-11-26 01:42:38,883 - app.src.rfc7807_handler - INFO - [correlation_id=a650b339-5fa6-49c1-b3ce-096b0ef2f438] - JWT token issued, token: ***MASKED*** - username=***MASKED***\n2025-11-26 01:42:38,883 - app.src.rfc7807_handler - INFO - [correlation_id=a650b339-5fa6-49c1-b3ce-096b0ef2f438] - HTTP request - method=POST, url=http://testserver/login, status_code=200\n2025-11-26 01:42:38,884 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=5cbe361d-a767-4919-b49b-a50df02dcffc] - User registered successfully - username=***MASKED***, password=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=5cbe361d-a767-4919-b49b-a50df02dcffc] - HTTP request - method=POST, url=http://testserver/register, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a650b339-5fa6-49c1-b3ce-096b0ef2f438] - Successful login for user - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a650b339-5fa6-49c1-b3ce-096b0ef2f438] - JWT token issued, token: ***MASKED*** - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a650b339-5fa6-49c1-b3ce-096b0ef2f438] - HTTP request - method=POST, url=http://testserver/login, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n&#34;}], &#34;tests/test_api_integration.py::test_login_wrong_password&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api_integration.py::test_login_wrong_password&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api_integration.py::test_login_wrong_password&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,886 - app.src.rfc7807_handler - WARNING - [correlation_id=629ff3fd-757d-4390-82c2-02b950f2278f] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:38,886 - app.src.rfc7807_handler - WARNING - [correlation_id=629ff3fd-757d-4390-82c2-02b950f2278f] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:38,886 - app.src.rfc7807_handler - INFO - [correlation_id=629ff3fd-757d-4390-82c2-02b950f2278f] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:38,887 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=629ff3fd-757d-4390-82c2-02b950f2278f] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=629ff3fd-757d-4390-82c2-02b950f2278f] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=629ff3fd-757d-4390-82c2-02b950f2278f] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n&#34;}], &#34;tests/test_api_integration.py::test_create_post_authenticated&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api_integration.py::test_create_post_authenticated&#34;, &#34;duration&#34;: &#34;7 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api_integration.py::test_create_post_authenticated&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;7 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,889 - app.src.rfc7807_handler - INFO - [correlation_id=ef77981a-a935-4edf-ab40-ec3075b4c5f1] - User registered successfully - username=***MASKED***, password=***MASKED***\n2025-11-26 01:42:38,889 - app.src.rfc7807_handler - INFO - [correlation_id=ef77981a-a935-4edf-ab40-ec3075b4c5f1] - HTTP request - method=POST, url=http://testserver/register, status_code=200\n2025-11-26 01:42:38,890 - httpx - INFO - HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,891 - app.src.rfc7807_handler - INFO - [correlation_id=184bcde8-f14f-4217-a479-a1824adcd561] - Successful login for user - username=***MASKED***\n2025-11-26 01:42:38,891 - app.src.rfc7807_handler - INFO - [correlation_id=184bcde8-f14f-4217-a479-a1824adcd561] - JWT token issued, token: ***MASKED*** - username=***MASKED***\n2025-11-26 01:42:38,891 - app.src.rfc7807_handler - INFO - [correlation_id=184bcde8-f14f-4217-a479-a1824adcd561] - HTTP request - method=POST, url=http://testserver/login, status_code=200\n2025-11-26 01:42:38,892 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,894 - app.src.rfc7807_handler - INFO - [correlation_id=c8a01294-6854-43f0-b1fc-e69cae698965] - Post created - post_id=1, status=draft, user_id=post_creator\n2025-11-26 01:42:38,894 - app.src.rfc7807_handler - INFO - [correlation_id=c8a01294-6854-43f0-b1fc-e69cae698965] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\n2025-11-26 01:42:38,895 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=ef77981a-a935-4edf-ab40-ec3075b4c5f1] - User registered successfully - username=***MASKED***, password=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=ef77981a-a935-4edf-ab40-ec3075b4c5f1] - HTTP request - method=POST, url=http://testserver/register, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=184bcde8-f14f-4217-a479-a1824adcd561] - Successful login for user - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=184bcde8-f14f-4217-a479-a1824adcd561] - JWT token issued, token: ***MASKED*** - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=184bcde8-f14f-4217-a479-a1824adcd561] - HTTP request - method=POST, url=http://testserver/login, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=c8a01294-6854-43f0-b1fc-e69cae698965] - Post created - post_id=1, status=draft, user_id=post_creator\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=c8a01294-6854-43f0-b1fc-e69cae698965] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n&#34;}], &#34;tests/test_api_integration.py::test_create_post_unauthenticated&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api_integration.py::test_create_post_unauthenticated&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api_integration.py::test_create_post_unauthenticated&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,897 - app.src.rfc7807_handler - WARNING - [correlation_id=f6e3ff99-8fac-4c25-80eb-a8d835dba55b] - Unauthorized post creation attempt: missing or anonymous user_id\n2025-11-26 01:42:38,898 - app.src.rfc7807_handler - WARNING - [correlation_id=f6e3ff99-8fac-4c25-80eb-a8d835dba55b] - ApiError occurred - code=authentication_required, error_message=Authentication required to create posts\n2025-11-26 01:42:38,898 - app.src.rfc7807_handler - INFO - [correlation_id=f6e3ff99-8fac-4c25-80eb-a8d835dba55b] - HTTP request - method=POST, url=http://testserver/posts, status_code=401\n2025-11-26 01:42:38,899 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f6e3ff99-8fac-4c25-80eb-a8d835dba55b] - Unauthorized post creation attempt: missing or anonymous user_id\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f6e3ff99-8fac-4c25-80eb-a8d835dba55b] - ApiError occurred - code=authentication_required, error_message=Authentication required to create posts\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f6e3ff99-8fac-4c25-80eb-a8d835dba55b] - HTTP request - method=POST, url=http://testserver/posts, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n&#34;}], &#34;tests/test_api_integration.py::test_get_user_posts&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api_integration.py::test_get_user_posts&#34;, &#34;duration&#34;: &#34;9 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api_integration.py::test_get_user_posts&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;9 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,900 - app.src.rfc7807_handler - INFO - [correlation_id=f1a07994-ee8a-46f3-bf49-60a2e45ddc32] - User registered successfully - username=***MASKED***, password=***MASKED***\n2025-11-26 01:42:38,900 - app.src.rfc7807_handler - INFO - [correlation_id=f1a07994-ee8a-46f3-bf49-60a2e45ddc32] - HTTP request - method=POST, url=http://testserver/register, status_code=200\n2025-11-26 01:42:38,901 - httpx - INFO - HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,902 - app.src.rfc7807_handler - INFO - [correlation_id=127efbec-8f8d-42c7-94ee-7c85888fecb5] - Successful login for user - username=***MASKED***\n2025-11-26 01:42:38,902 - app.src.rfc7807_handler - INFO - [correlation_id=127efbec-8f8d-42c7-94ee-7c85888fecb5] - JWT token issued, token: ***MASKED*** - username=***MASKED***\n2025-11-26 01:42:38,902 - app.src.rfc7807_handler - INFO - [correlation_id=127efbec-8f8d-42c7-94ee-7c85888fecb5] - HTTP request - method=POST, url=http://testserver/login, status_code=200\n2025-11-26 01:42:38,903 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,905 - app.src.rfc7807_handler - INFO - [correlation_id=9cdf7334-b77b-414d-a7cc-d980d148ebc6] - Post created - post_id=2, status=draft, user_id=posts_viewer\n2025-11-26 01:42:38,905 - app.src.rfc7807_handler - INFO - [correlation_id=9cdf7334-b77b-414d-a7cc-d980d148ebc6] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\n2025-11-26 01:42:38,906 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,907 - app.src.rfc7807_handler - INFO - [correlation_id=ec3f3838-41d4-4e96-af49-0812c59b0081] - HTTP request - method=GET, url=http://testserver/posts, status_code=200\n2025-11-26 01:42:38,908 - httpx - INFO - HTTP Request: GET http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f1a07994-ee8a-46f3-bf49-60a2e45ddc32] - User registered successfully - username=***MASKED***, password=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f1a07994-ee8a-46f3-bf49-60a2e45ddc32] - HTTP request - method=POST, url=http://testserver/register, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=127efbec-8f8d-42c7-94ee-7c85888fecb5] - Successful login for user - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=127efbec-8f8d-42c7-94ee-7c85888fecb5] - JWT token issued, token: ***MASKED*** - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=127efbec-8f8d-42c7-94ee-7c85888fecb5] - HTTP request - method=POST, url=http://testserver/login, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=9cdf7334-b77b-414d-a7cc-d980d148ebc6] - Post created - post_id=2, status=draft, user_id=posts_viewer\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=9cdf7334-b77b-414d-a7cc-d980d148ebc6] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=ec3f3838-41d4-4e96-af49-0812c59b0081] - HTTP request - method=GET, url=http://testserver/posts, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n&#34;}], &#34;tests/test_api_integration.py::test_get_post_by_id&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api_integration.py::test_get_post_by_id&#34;, &#34;duration&#34;: &#34;10 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api_integration.py::test_get_post_by_id&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;10 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,910 - app.src.rfc7807_handler - INFO - [correlation_id=8ba09906-a4b4-465f-b58b-c709c40a9838] - User registered successfully - username=***MASKED***, password=***MASKED***\n2025-11-26 01:42:38,910 - app.src.rfc7807_handler - INFO - [correlation_id=8ba09906-a4b4-465f-b58b-c709c40a9838] - HTTP request - method=POST, url=http://testserver/register, status_code=200\n2025-11-26 01:42:38,911 - httpx - INFO - HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,912 - app.src.rfc7807_handler - INFO - [correlation_id=766f8337-2d2a-4700-95ca-b77cbb2a5bd4] - Successful login for user - username=***MASKED***\n2025-11-26 01:42:38,912 - app.src.rfc7807_handler - INFO - [correlation_id=766f8337-2d2a-4700-95ca-b77cbb2a5bd4] - JWT token issued, token: ***MASKED*** - username=***MASKED***\n2025-11-26 01:42:38,912 - app.src.rfc7807_handler - INFO - [correlation_id=766f8337-2d2a-4700-95ca-b77cbb2a5bd4] - HTTP request - method=POST, url=http://testserver/login, status_code=200\n2025-11-26 01:42:38,913 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,915 - app.src.rfc7807_handler - INFO - [correlation_id=9d6bdfa0-026a-4a08-85df-4e79bba1dab1] - Post created - post_id=3, status=draft, user_id=post_getter\n2025-11-26 01:42:38,915 - app.src.rfc7807_handler - INFO - [correlation_id=9d6bdfa0-026a-4a08-85df-4e79bba1dab1] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\n2025-11-26 01:42:38,916 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,917 - app.src.rfc7807_handler - INFO - [correlation_id=779b5300-fb9d-4cc7-9abd-894be48e4c1e] - HTTP request - method=GET, url=http://testserver/posts/3, status_code=200\n2025-11-26 01:42:38,918 - httpx - INFO - HTTP Request: GET http://testserver/posts/3 &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=8ba09906-a4b4-465f-b58b-c709c40a9838] - User registered successfully - username=***MASKED***, password=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=8ba09906-a4b4-465f-b58b-c709c40a9838] - HTTP request - method=POST, url=http://testserver/register, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=766f8337-2d2a-4700-95ca-b77cbb2a5bd4] - Successful login for user - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=766f8337-2d2a-4700-95ca-b77cbb2a5bd4] - JWT token issued, token: ***MASKED*** - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=766f8337-2d2a-4700-95ca-b77cbb2a5bd4] - HTTP request - method=POST, url=http://testserver/login, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=9d6bdfa0-026a-4a08-85df-4e79bba1dab1] - Post created - post_id=3, status=draft, user_id=post_getter\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=9d6bdfa0-026a-4a08-85df-4e79bba1dab1] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=779b5300-fb9d-4cc7-9abd-894be48e4c1e] - HTTP request - method=GET, url=http://testserver/posts/3, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/posts/3 &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n&#34;}], &#34;tests/test_api_integration.py::test_update_own_post&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api_integration.py::test_update_own_post&#34;, &#34;duration&#34;: &#34;9 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api_integration.py::test_update_own_post&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;9 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,920 - app.src.rfc7807_handler - INFO - [correlation_id=f02eb923-29f6-44b7-840c-b3d5bcf22775] - User registered successfully - username=***MASKED***, password=***MASKED***\n2025-11-26 01:42:38,920 - app.src.rfc7807_handler - INFO - [correlation_id=f02eb923-29f6-44b7-840c-b3d5bcf22775] - HTTP request - method=POST, url=http://testserver/register, status_code=200\n2025-11-26 01:42:38,921 - httpx - INFO - HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,922 - app.src.rfc7807_handler - INFO - [correlation_id=0638f660-7418-43b6-8132-aa261f650a8c] - Successful login for user - username=***MASKED***\n2025-11-26 01:42:38,922 - app.src.rfc7807_handler - INFO - [correlation_id=0638f660-7418-43b6-8132-aa261f650a8c] - JWT token issued, token: ***MASKED*** - username=***MASKED***\n2025-11-26 01:42:38,922 - app.src.rfc7807_handler - INFO - [correlation_id=0638f660-7418-43b6-8132-aa261f650a8c] - HTTP request - method=POST, url=http://testserver/login, status_code=200\n2025-11-26 01:42:38,923 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,924 - app.src.rfc7807_handler - INFO - [correlation_id=a3bd2cb0-6792-4c23-acba-05e86e5cd6dd] - Post created - post_id=4, status=draft, user_id=post_updater\n2025-11-26 01:42:38,924 - app.src.rfc7807_handler - INFO - [correlation_id=a3bd2cb0-6792-4c23-acba-05e86e5cd6dd] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\n2025-11-26 01:42:38,925 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,927 - app.src.rfc7807_handler - INFO - [correlation_id=6b88358a-5216-4e7a-bedd-76f0ce82a9e4] - Post updated - post_id=4, user_id=post_updater\n2025-11-26 01:42:38,927 - app.src.rfc7807_handler - INFO - [correlation_id=6b88358a-5216-4e7a-bedd-76f0ce82a9e4] - HTTP request - method=PATCH, url=http://testserver/posts/4, status_code=200\n2025-11-26 01:42:38,928 - httpx - INFO - HTTP Request: PATCH http://testserver/posts/4 &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f02eb923-29f6-44b7-840c-b3d5bcf22775] - User registered successfully - username=***MASKED***, password=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f02eb923-29f6-44b7-840c-b3d5bcf22775] - HTTP request - method=POST, url=http://testserver/register, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=0638f660-7418-43b6-8132-aa261f650a8c] - Successful login for user - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=0638f660-7418-43b6-8132-aa261f650a8c] - JWT token issued, token: ***MASKED*** - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=0638f660-7418-43b6-8132-aa261f650a8c] - HTTP request - method=POST, url=http://testserver/login, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a3bd2cb0-6792-4c23-acba-05e86e5cd6dd] - Post created - post_id=4, status=draft, user_id=post_updater\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a3bd2cb0-6792-4c23-acba-05e86e5cd6dd] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=6b88358a-5216-4e7a-bedd-76f0ce82a9e4] - Post updated - post_id=4, user_id=post_updater\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=6b88358a-5216-4e7a-bedd-76f0ce82a9e4] - HTTP request - method=PATCH, url=http://testserver/posts/4, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: PATCH http://testserver/posts/4 &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n&#34;}], &#34;tests/test_api_integration.py::test_update_other_user_post&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api_integration.py::test_update_other_user_post&#34;, &#34;duration&#34;: &#34;14 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api_integration.py::test_update_other_user_post&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;14 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,929 - app.src.rfc7807_handler - INFO - [correlation_id=a4db4490-59f5-4e83-a2f8-9be2f1831a5b] - User registered successfully - username=***MASKED***, password=***MASKED***\n2025-11-26 01:42:38,930 - app.src.rfc7807_handler - INFO - [correlation_id=a4db4490-59f5-4e83-a2f8-9be2f1831a5b] - HTTP request - method=POST, url=http://testserver/register, status_code=200\n2025-11-26 01:42:38,930 - httpx - INFO - HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,932 - app.src.rfc7807_handler - INFO - [correlation_id=f61d2f58-0515-4fa7-b92c-2aa14c0d4bc9] - User registered successfully - username=***MASKED***, password=***MASKED***\n2025-11-26 01:42:38,932 - app.src.rfc7807_handler - INFO - [correlation_id=f61d2f58-0515-4fa7-b92c-2aa14c0d4bc9] - HTTP request - method=POST, url=http://testserver/register, status_code=200\n2025-11-26 01:42:38,933 - httpx - INFO - HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,934 - app.src.rfc7807_handler - INFO - [correlation_id=f029c655-3edc-429b-8169-231ac30f2875] - Successful login for user - username=***MASKED***\n2025-11-26 01:42:38,934 - app.src.rfc7807_handler - INFO - [correlation_id=f029c655-3edc-429b-8169-231ac30f2875] - JWT token issued, token: ***MASKED*** - username=***MASKED***\n2025-11-26 01:42:38,934 - app.src.rfc7807_handler - INFO - [correlation_id=f029c655-3edc-429b-8169-231ac30f2875] - HTTP request - method=POST, url=http://testserver/login, status_code=200\n2025-11-26 01:42:38,935 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,936 - app.src.rfc7807_handler - INFO - [correlation_id=7756e730-93ba-48b3-90c0-d335272674ba] - Post created - post_id=5, status=draft, user_id=owner_user\n2025-11-26 01:42:38,937 - app.src.rfc7807_handler - INFO - [correlation_id=7756e730-93ba-48b3-90c0-d335272674ba] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\n2025-11-26 01:42:38,937 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,939 - app.src.rfc7807_handler - INFO - [correlation_id=3eff283f-78f7-4b3e-b58a-9a9f97982311] - Successful login for user - username=***MASKED***\n2025-11-26 01:42:38,939 - app.src.rfc7807_handler - INFO - [correlation_id=3eff283f-78f7-4b3e-b58a-9a9f97982311] - JWT token issued, token: ***MASKED*** - username=***MASKED***\n2025-11-26 01:42:38,939 - app.src.rfc7807_handler - INFO - [correlation_id=3eff283f-78f7-4b3e-b58a-9a9f97982311] - HTTP request - method=POST, url=http://testserver/login, status_code=200\n2025-11-26 01:42:38,940 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,941 - app.src.rfc7807_handler - WARNING - [correlation_id=fa32b7a4-2304-4400-8e59-aae3ee83f362] - Unauthorized post update attempt - user_id=hacker_user, post_id=5, owner=owner_user\n2025-11-26 01:42:38,941 - app.src.rfc7807_handler - WARNING - [correlation_id=fa32b7a4-2304-4400-8e59-aae3ee83f362] - ApiError occurred - code=forbidden, error_message=You can only edit your own posts\n2025-11-26 01:42:38,941 - app.src.rfc7807_handler - INFO - [correlation_id=fa32b7a4-2304-4400-8e59-aae3ee83f362] - HTTP request - method=PATCH, url=http://testserver/posts/5, status_code=403\n2025-11-26 01:42:38,942 - httpx - INFO - HTTP Request: PATCH http://testserver/posts/5 &amp;quot;HTTP/1.1 403 Forbidden&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a4db4490-59f5-4e83-a2f8-9be2f1831a5b] - User registered successfully - username=***MASKED***, password=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a4db4490-59f5-4e83-a2f8-9be2f1831a5b] - HTTP request - method=POST, url=http://testserver/register, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f61d2f58-0515-4fa7-b92c-2aa14c0d4bc9] - User registered successfully - username=***MASKED***, password=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f61d2f58-0515-4fa7-b92c-2aa14c0d4bc9] - HTTP request - method=POST, url=http://testserver/register, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f029c655-3edc-429b-8169-231ac30f2875] - Successful login for user - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f029c655-3edc-429b-8169-231ac30f2875] - JWT token issued, token: ***MASKED*** - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f029c655-3edc-429b-8169-231ac30f2875] - HTTP request - method=POST, url=http://testserver/login, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=7756e730-93ba-48b3-90c0-d335272674ba] - Post created - post_id=5, status=draft, user_id=owner_user\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=7756e730-93ba-48b3-90c0-d335272674ba] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=3eff283f-78f7-4b3e-b58a-9a9f97982311] - Successful login for user - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=3eff283f-78f7-4b3e-b58a-9a9f97982311] - JWT token issued, token: ***MASKED*** - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=3eff283f-78f7-4b3e-b58a-9a9f97982311] - HTTP request - method=POST, url=http://testserver/login, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=fa32b7a4-2304-4400-8e59-aae3ee83f362] - Unauthorized post update attempt - user_id=hacker_user, post_id=5, owner=owner_user\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=fa32b7a4-2304-4400-8e59-aae3ee83f362] - ApiError occurred - code=forbidden, error_message=You can only edit your own posts\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=fa32b7a4-2304-4400-8e59-aae3ee83f362] - HTTP request - method=PATCH, url=http://testserver/posts/5, status_code=403\nINFO     httpx:_client.py:1038 HTTP Request: PATCH http://testserver/posts/5 &amp;quot;HTTP/1.1 403 Forbidden&amp;quot;\n\n&#34;}], &#34;tests/test_api_integration.py::test_delete_own_post&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api_integration.py::test_delete_own_post&#34;, &#34;duration&#34;: &#34;11 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api_integration.py::test_delete_own_post&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;11 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,944 - app.src.rfc7807_handler - INFO - [correlation_id=1e240d2a-a1bf-419c-bf06-c8aab968136d] - User registered successfully - username=***MASKED***, password=***MASKED***\n2025-11-26 01:42:38,944 - app.src.rfc7807_handler - INFO - [correlation_id=1e240d2a-a1bf-419c-bf06-c8aab968136d] - HTTP request - method=POST, url=http://testserver/register, status_code=200\n2025-11-26 01:42:38,945 - httpx - INFO - HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,947 - app.src.rfc7807_handler - INFO - [correlation_id=0d0d9813-e278-4e4e-b52f-c4b8df9a12c0] - Successful login for user - username=***MASKED***\n2025-11-26 01:42:38,947 - app.src.rfc7807_handler - INFO - [correlation_id=0d0d9813-e278-4e4e-b52f-c4b8df9a12c0] - JWT token issued, token: ***MASKED*** - username=***MASKED***\n2025-11-26 01:42:38,947 - app.src.rfc7807_handler - INFO - [correlation_id=0d0d9813-e278-4e4e-b52f-c4b8df9a12c0] - HTTP request - method=POST, url=http://testserver/login, status_code=200\n2025-11-26 01:42:38,948 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,949 - app.src.rfc7807_handler - INFO - [correlation_id=77e2ed10-d796-4e0f-92bf-795ac6f5c379] - Post created - post_id=6, status=draft, user_id=post_deleter\n2025-11-26 01:42:38,949 - app.src.rfc7807_handler - INFO - [correlation_id=77e2ed10-d796-4e0f-92bf-795ac6f5c379] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\n2025-11-26 01:42:38,950 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,951 - app.src.rfc7807_handler - INFO - [correlation_id=9b62e5ca-c97e-41de-b791-8673331b5849] - Post deleted - post_id=6, user_id=post_deleter\n2025-11-26 01:42:38,951 - app.src.rfc7807_handler - INFO - [correlation_id=9b62e5ca-c97e-41de-b791-8673331b5849] - HTTP request - method=DELETE, url=http://testserver/posts/6, status_code=200\n2025-11-26 01:42:38,952 - httpx - INFO - HTTP Request: DELETE http://testserver/posts/6 &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,953 - app.src.rfc7807_handler - WARNING - [correlation_id=f370e525-0adf-47b8-b5dc-b4bf35e9a31e] - ApiError occurred - code=not_found, error_message=post not found\n2025-11-26 01:42:38,953 - app.src.rfc7807_handler - INFO - [correlation_id=f370e525-0adf-47b8-b5dc-b4bf35e9a31e] - HTTP request - method=GET, url=http://testserver/posts/6, status_code=404\n2025-11-26 01:42:38,954 - httpx - INFO - HTTP Request: GET http://testserver/posts/6 &amp;quot;HTTP/1.1 404 Not Found&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=1e240d2a-a1bf-419c-bf06-c8aab968136d] - User registered successfully - username=***MASKED***, password=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=1e240d2a-a1bf-419c-bf06-c8aab968136d] - HTTP request - method=POST, url=http://testserver/register, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=0d0d9813-e278-4e4e-b52f-c4b8df9a12c0] - Successful login for user - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=0d0d9813-e278-4e4e-b52f-c4b8df9a12c0] - JWT token issued, token: ***MASKED*** - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=0d0d9813-e278-4e4e-b52f-c4b8df9a12c0] - HTTP request - method=POST, url=http://testserver/login, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=77e2ed10-d796-4e0f-92bf-795ac6f5c379] - Post created - post_id=6, status=draft, user_id=post_deleter\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=77e2ed10-d796-4e0f-92bf-795ac6f5c379] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=9b62e5ca-c97e-41de-b791-8673331b5849] - Post deleted - post_id=6, user_id=post_deleter\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=9b62e5ca-c97e-41de-b791-8673331b5849] - HTTP request - method=DELETE, url=http://testserver/posts/6, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: DELETE http://testserver/posts/6 &amp;quot;HTTP/1.1 200 OK&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f370e525-0adf-47b8-b5dc-b4bf35e9a31e] - ApiError occurred - code=not_found, error_message=post not found\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f370e525-0adf-47b8-b5dc-b4bf35e9a31e] - HTTP request - method=GET, url=http://testserver/posts/6, status_code=404\nINFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/posts/6 &amp;quot;HTTP/1.1 404 Not Found&amp;quot;\n\n&#34;}], &#34;tests/test_api_integration.py::test_get_public_posts&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api_integration.py::test_get_public_posts&#34;, &#34;duration&#34;: &#34;9 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api_integration.py::test_get_public_posts&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;9 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,956 - app.src.rfc7807_handler - INFO - [correlation_id=d8a2482f-5ead-4822-8a46-1b254a0e877e] - User registered successfully - username=***MASKED***, password=***MASKED***\n2025-11-26 01:42:38,956 - app.src.rfc7807_handler - INFO - [correlation_id=d8a2482f-5ead-4822-8a46-1b254a0e877e] - HTTP request - method=POST, url=http://testserver/register, status_code=200\n2025-11-26 01:42:38,957 - httpx - INFO - HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,958 - app.src.rfc7807_handler - INFO - [correlation_id=5fbbd8d0-36a7-474f-bf7c-b6a1ae2940f4] - Successful login for user - username=***MASKED***\n2025-11-26 01:42:38,958 - app.src.rfc7807_handler - INFO - [correlation_id=5fbbd8d0-36a7-474f-bf7c-b6a1ae2940f4] - JWT token issued, token: ***MASKED*** - username=***MASKED***\n2025-11-26 01:42:38,958 - app.src.rfc7807_handler - INFO - [correlation_id=5fbbd8d0-36a7-474f-bf7c-b6a1ae2940f4] - HTTP request - method=POST, url=http://testserver/login, status_code=200\n2025-11-26 01:42:38,959 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,961 - app.src.rfc7807_handler - INFO - [correlation_id=915af571-d3a1-4977-88dc-e46b986a5760] - Post created - post_id=6, status=published, user_id=public_poster\n2025-11-26 01:42:38,961 - app.src.rfc7807_handler - INFO - [correlation_id=915af571-d3a1-4977-88dc-e46b986a5760] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\n2025-11-26 01:42:38,962 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:38,963 - app.src.rfc7807_handler - INFO - [correlation_id=cdbf6732-550d-4172-8faa-b2d278311739] - HTTP request - method=GET, url=http://testserver/posts/public, status_code=200\n2025-11-26 01:42:38,964 - httpx - INFO - HTTP Request: GET http://testserver/posts/public &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=d8a2482f-5ead-4822-8a46-1b254a0e877e] - User registered successfully - username=***MASKED***, password=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=d8a2482f-5ead-4822-8a46-1b254a0e877e] - HTTP request - method=POST, url=http://testserver/register, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/register &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=5fbbd8d0-36a7-474f-bf7c-b6a1ae2940f4] - Successful login for user - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=5fbbd8d0-36a7-474f-bf7c-b6a1ae2940f4] - JWT token issued, token: ***MASKED*** - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=5fbbd8d0-36a7-474f-bf7c-b6a1ae2940f4] - HTTP request - method=POST, url=http://testserver/login, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=915af571-d3a1-4977-88dc-e46b986a5760] - Post created - post_id=6, status=published, user_id=public_poster\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=915af571-d3a1-4977-88dc-e46b986a5760] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=cdbf6732-550d-4172-8faa-b2d278311739] - HTTP request - method=GET, url=http://testserver/posts/public, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/posts/public &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n&#34;}], &#34;tests/test_api_integration.py::test_health_check&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api_integration.py::test_health_check&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api_integration.py::test_health_check&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,965 - app.src.rfc7807_handler - INFO - [correlation_id=c8c347ac-cc35-4be0-a171-8042412b9272] - HTTP request - method=GET, url=http://testserver/health, status_code=200\n2025-11-26 01:42:38,966 - httpx - INFO - HTTP Request: GET http://testserver/health &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=c8c347ac-cc35-4be0-a171-8042412b9272] - HTTP request - method=GET, url=http://testserver/health, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/health &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n&#34;}], &#34;tests/test_errors.py::test_not_found_item&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_errors.py::test_not_found_item&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_errors.py::test_not_found_item&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,968 - app.src.rfc7807_handler - WARNING - [correlation_id=a713ac25-a8ba-456e-bfc1-8984b29074fb] - ApiError occurred - code=not_found, error_message=item not found\n2025-11-26 01:42:38,968 - app.src.rfc7807_handler - INFO - [correlation_id=a713ac25-a8ba-456e-bfc1-8984b29074fb] - HTTP request - method=GET, url=http://testserver/items/999, status_code=404\n2025-11-26 01:42:38,969 - httpx - INFO - HTTP Request: GET http://testserver/items/999 &amp;quot;HTTP/1.1 404 Not Found&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a713ac25-a8ba-456e-bfc1-8984b29074fb] - ApiError occurred - code=not_found, error_message=item not found\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a713ac25-a8ba-456e-bfc1-8984b29074fb] - HTTP request - method=GET, url=http://testserver/items/999, status_code=404\nINFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/items/999 &amp;quot;HTTP/1.1 404 Not Found&amp;quot;\n\n&#34;}], &#34;tests/test_errors.py::test_validation_error&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_errors.py::test_validation_error&#34;, &#34;duration&#34;: &#34;4 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_errors.py::test_validation_error&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;4 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,972 - app.src.rfc7807_handler - INFO - [correlation_id=d774f3f1-f596-4c86-be21-fffbec816789] - Validation error occurred - errors={&amp;#x27;body.name&amp;#x27;: &amp;#x27;String should have at least 1 character&amp;#x27;}\n2025-11-26 01:42:38,972 - app.src.rfc7807_handler - INFO - [correlation_id=d774f3f1-f596-4c86-be21-fffbec816789] - HTTP request - method=POST, url=http://testserver/items, status_code=422\n2025-11-26 01:42:38,973 - httpx - INFO - HTTP Request: POST http://testserver/items &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=d774f3f1-f596-4c86-be21-fffbec816789] - Validation error occurred - errors={&amp;#x27;body.name&amp;#x27;: &amp;#x27;String should have at least 1 character&amp;#x27;}\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=d774f3f1-f596-4c86-be21-fffbec816789] - HTTP request - method=POST, url=http://testserver/items, status_code=422\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/items &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n&#34;}], &#34;tests/test_health.py::test_health_ok&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_health.py::test_health_ok&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_health.py::test_health_ok&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,976 - app.src.rfc7807_handler - INFO - [correlation_id=48599721-48c1-476f-a79a-f730b3f82d18] - HTTP request - method=GET, url=http://testserver/health, status_code=200\n2025-11-26 01:42:38,977 - httpx - INFO - HTTP Request: GET http://testserver/health &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=48599721-48c1-476f-a79a-f730b3f82d18] - HTTP request - method=GET, url=http://testserver/health, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/health &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n&#34;}], &#34;tests/test_schemas.py::test_normalize_unicode_basic&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_normalize_unicode_basic&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_normalize_unicode_basic&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_normalize_unicode_control_chars&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_normalize_unicode_control_chars&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_normalize_unicode_control_chars&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_user_register_valid&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_user_register_valid&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_user_register_valid&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_user_register_username_too_short&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_user_register_username_too_short&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_user_register_username_too_short&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_user_register_username_too_long&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_user_register_username_too_long&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_user_register_username_too_long&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_user_register_password_too_short&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_user_register_password_too_short&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_user_register_password_too_short&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_user_register_password_too_long&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_user_register_password_too_long&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_user_register_password_too_long&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_item_create_valid&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_item_create_valid&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_item_create_valid&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_item_create_name_empty&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_item_create_name_empty&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_item_create_name_empty&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_item_create_name_too_long&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_item_create_name_too_long&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_item_create_name_too_long&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_item_create_name_normalized&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_item_create_name_normalized&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_item_create_name_normalized&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_post_create_valid&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_post_create_valid&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_post_create_valid&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_post_create_title_too_long&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_post_create_title_too_long&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_post_create_title_too_long&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_post_create_body_too_long&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_post_create_body_too_long&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_post_create_body_too_long&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_post_create_invalid_status&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_post_create_invalid_status&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_post_create_invalid_status&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_post_update_partial&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_post_update_partial&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_post_update_partial&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_validate_tag_valid&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_validate_tag_valid&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_validate_tag_valid&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_schemas.py::test_validate_tag_invalid&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_schemas.py::test_validate_tag_invalid&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_schemas.py::test_validate_tag_invalid&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_coding.py::test_health_endpoint&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_health_endpoint&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_health_endpoint&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,992 - app.src.rfc7807_handler - INFO - [correlation_id=be64d5c0-b839-4aec-82bf-5d87d08de995] - HTTP request - method=GET, url=http://testserver/health, status_code=200\n2025-11-26 01:42:38,993 - httpx - INFO - HTTP Request: GET http://testserver/health &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=be64d5c0-b839-4aec-82bf-5d87d08de995] - HTTP request - method=GET, url=http://testserver/health, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/health &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n&#34;}], &#34;tests/test_secure_coding.py::test_rfc7807_validation_error&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_rfc7807_validation_error&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_rfc7807_validation_error&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,995 - app.src.rfc7807_handler - INFO - [correlation_id=9a434d5a-c47e-4eb9-ae5b-d58e2a4ef62c] - Validation error occurred - errors={&amp;#x27;body.name&amp;#x27;: &amp;#x27;String should have at least 1 character&amp;#x27;}\n2025-11-26 01:42:38,995 - app.src.rfc7807_handler - INFO - [correlation_id=9a434d5a-c47e-4eb9-ae5b-d58e2a4ef62c] - HTTP request - method=POST, url=http://testserver/items, status_code=422\n2025-11-26 01:42:38,996 - httpx - INFO - HTTP Request: POST http://testserver/items &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=9a434d5a-c47e-4eb9-ae5b-d58e2a4ef62c] - Validation error occurred - errors={&amp;#x27;body.name&amp;#x27;: &amp;#x27;String should have at least 1 character&amp;#x27;}\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=9a434d5a-c47e-4eb9-ae5b-d58e2a4ef62c] - HTTP request - method=POST, url=http://testserver/items, status_code=422\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/items &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n&#34;}], &#34;tests/test_secure_coding.py::test_long_title_returns_422&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_long_title_returns_422&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_long_title_returns_422&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:38,998 - app.src.rfc7807_handler - INFO - [correlation_id=f4daba43-a8b8-4bb1-a332-79100a39e739] - Validation error occurred - errors={&amp;#x27;body.title&amp;#x27;: &amp;#x27;String should have at most 256 characters&amp;#x27;}\n2025-11-26 01:42:38,998 - app.src.rfc7807_handler - INFO - [correlation_id=f4daba43-a8b8-4bb1-a332-79100a39e739] - HTTP request - method=POST, url=http://testserver/posts, status_code=422\n2025-11-26 01:42:39,000 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f4daba43-a8b8-4bb1-a332-79100a39e739] - Validation error occurred - errors={&amp;#x27;body.title&amp;#x27;: &amp;#x27;String should have at most 256 characters&amp;#x27;}\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f4daba43-a8b8-4bb1-a332-79100a39e739] - HTTP request - method=POST, url=http://testserver/posts, status_code=422\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n&#34;}], &#34;tests/test_secure_coding.py::test_long_body_returns_422&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_long_body_returns_422&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_long_body_returns_422&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,002 - app.src.rfc7807_handler - INFO - [correlation_id=0eb76ac5-e8f7-4d4f-92bc-46ce96e98653] - Validation error occurred - errors={&amp;#x27;body.body&amp;#x27;: &amp;#x27;String should have at most 2000 characters&amp;#x27;}\n2025-11-26 01:42:39,002 - app.src.rfc7807_handler - INFO - [correlation_id=0eb76ac5-e8f7-4d4f-92bc-46ce96e98653] - HTTP request - method=POST, url=http://testserver/posts, status_code=422\n2025-11-26 01:42:39,003 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=0eb76ac5-e8f7-4d4f-92bc-46ce96e98653] - Validation error occurred - errors={&amp;#x27;body.body&amp;#x27;: &amp;#x27;String should have at most 2000 characters&amp;#x27;}\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=0eb76ac5-e8f7-4d4f-92bc-46ce96e98653] - HTTP request - method=POST, url=http://testserver/posts, status_code=422\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n&#34;}], &#34;tests/test_secure_coding.py::test_empty_post_fields&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_empty_post_fields&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_empty_post_fields&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,005 - app.src.rfc7807_handler - INFO - [correlation_id=09422727-d00b-4d49-bca2-89621c4a2d11] - Validation error occurred - errors={&amp;#x27;body.title&amp;#x27;: &amp;#x27;Value error, field must not be empty after normalization&amp;#x27;, &amp;#x27;body.body&amp;#x27;: &amp;#x27;Value error, field must not be empty after normalization&amp;#x27;}\n2025-11-26 01:42:39,005 - app.src.rfc7807_handler - INFO - [correlation_id=09422727-d00b-4d49-bca2-89621c4a2d11] - HTTP request - method=POST, url=http://testserver/posts, status_code=422\n2025-11-26 01:42:39,006 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=09422727-d00b-4d49-bca2-89621c4a2d11] - Validation error occurred - errors={&amp;#x27;body.title&amp;#x27;: &amp;#x27;Value error, field must not be empty after normalization&amp;#x27;, &amp;#x27;body.body&amp;#x27;: &amp;#x27;Value error, field must not be empty after normalization&amp;#x27;}\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=09422727-d00b-4d49-bca2-89621c4a2d11] - HTTP request - method=POST, url=http://testserver/posts, status_code=422\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n&#34;}], &#34;tests/test_secure_coding.py::test_invalid_post_status&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_invalid_post_status&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_invalid_post_status&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,008 - app.src.rfc7807_handler - INFO - [correlation_id=2c41c281-6eb2-47a8-b9f2-5710a7d4c893] - Validation error occurred - errors={&amp;#x27;body.status&amp;#x27;: &amp;quot;String should match pattern &amp;#x27;^(draft|published)$&amp;#x27;&amp;quot;}\n2025-11-26 01:42:39,008 - app.src.rfc7807_handler - INFO - [correlation_id=2c41c281-6eb2-47a8-b9f2-5710a7d4c893] - HTTP request - method=POST, url=http://testserver/posts, status_code=422\n2025-11-26 01:42:39,009 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=2c41c281-6eb2-47a8-b9f2-5710a7d4c893] - Validation error occurred - errors={&amp;#x27;body.status&amp;#x27;: &amp;quot;String should match pattern &amp;#x27;^(draft|published)$&amp;#x27;&amp;quot;}\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=2c41c281-6eb2-47a8-b9f2-5710a7d4c893] - HTTP request - method=POST, url=http://testserver/posts, status_code=422\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n&#34;}], &#34;tests/test_secure_coding.py::test_path_traversal_attack&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_path_traversal_attack&#34;, &#34;duration&#34;: &#34;4 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_path_traversal_attack&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;4 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_coding.py::test_symlink_attack&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_symlink_attack&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_symlink_attack&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_coding.py::test_file_too_big&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_file_too_big&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_file_too_big&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_coding.py::test_invalid_file_type&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_invalid_file_type&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_invalid_file_type&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_coding.py::test_pii_masking&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_pii_masking&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_pii_masking&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_coding.py::test_correlation_id_present&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_correlation_id_present&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_correlation_id_present&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,020 - app.src.rfc7807_handler - WARNING - [correlation_id=baf74089-8d14-4691-aab8-b8c1f6480531] - ApiError occurred - code=not_found, error_message=item not found\n2025-11-26 01:42:39,020 - app.src.rfc7807_handler - INFO - [correlation_id=baf74089-8d14-4691-aab8-b8c1f6480531] - HTTP request - method=GET, url=http://testserver/items/999, status_code=404\n2025-11-26 01:42:39,021 - httpx - INFO - HTTP Request: GET http://testserver/items/999 &amp;quot;HTTP/1.1 404 Not Found&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=baf74089-8d14-4691-aab8-b8c1f6480531] - ApiError occurred - code=not_found, error_message=item not found\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=baf74089-8d14-4691-aab8-b8c1f6480531] - HTTP request - method=GET, url=http://testserver/items/999, status_code=404\nINFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/items/999 &amp;quot;HTTP/1.1 404 Not Found&amp;quot;\n\n&#34;}], &#34;tests/test_secure_coding.py::test_unicode_normalization&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_unicode_normalization&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_unicode_normalization&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,023 - app.src.rfc7807_handler - INFO - [correlation_id=08530fca-07c6-4d63-a52e-33b394175323] - Post created - post_id=7, status=draft, user_id=testuser\n2025-11-26 01:42:39,024 - app.src.rfc7807_handler - INFO - [correlation_id=08530fca-07c6-4d63-a52e-33b394175323] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\n2025-11-26 01:42:39,025 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=08530fca-07c6-4d63-a52e-33b394175323] - Post created - post_id=7, status=draft, user_id=testuser\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=08530fca-07c6-4d63-a52e-33b394175323] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n&#34;}], &#34;tests/test_secure_coding.py::test_control_characters_stripped&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_control_characters_stripped&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_control_characters_stripped&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,027 - app.src.rfc7807_handler - INFO - [correlation_id=04ffaa74-2150-4bfe-ae43-35abb4d42cda] - Validation error occurred - errors={&amp;#x27;body.title&amp;#x27;: &amp;#x27;Value error, field must not be empty after normalization&amp;#x27;, &amp;#x27;body.body&amp;#x27;: &amp;#x27;Value error, field must not be empty after normalization&amp;#x27;}\n2025-11-26 01:42:39,027 - app.src.rfc7807_handler - INFO - [correlation_id=04ffaa74-2150-4bfe-ae43-35abb4d42cda] - HTTP request - method=POST, url=http://testserver/posts, status_code=422\n2025-11-26 01:42:39,028 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=04ffaa74-2150-4bfe-ae43-35abb4d42cda] - Validation error occurred - errors={&amp;#x27;body.title&amp;#x27;: &amp;#x27;Value error, field must not be empty after normalization&amp;#x27;, &amp;#x27;body.body&amp;#x27;: &amp;#x27;Value error, field must not be empty after normalization&amp;#x27;}\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=04ffaa74-2150-4bfe-ae43-35abb4d42cda] - HTTP request - method=POST, url=http://testserver/posts, status_code=422\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n&#34;}], &#34;tests/test_secure_coding.py::test_internal_error_masking&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_internal_error_masking&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_internal_error_masking&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_coding.py::test_validation_error_format&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_validation_error_format&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_validation_error_format&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,030 - app.src.rfc7807_handler - INFO - [correlation_id=daed7830-a622-4984-8f79-88fd84e3b2b6] - Validation error occurred - errors={&amp;#x27;body.name&amp;#x27;: &amp;#x27;String should have at most 100 characters&amp;#x27;}\n2025-11-26 01:42:39,030 - app.src.rfc7807_handler - INFO - [correlation_id=daed7830-a622-4984-8f79-88fd84e3b2b6] - HTTP request - method=POST, url=http://testserver/items, status_code=422\n2025-11-26 01:42:39,031 - httpx - INFO - HTTP Request: POST http://testserver/items &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=daed7830-a622-4984-8f79-88fd84e3b2b6] - Validation error occurred - errors={&amp;#x27;body.name&amp;#x27;: &amp;#x27;String should have at most 100 characters&amp;#x27;}\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=daed7830-a622-4984-8f79-88fd84e3b2b6] - HTTP request - method=POST, url=http://testserver/items, status_code=422\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/items &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n&#34;}], &#34;tests/test_secure_coding.py::test_sniff_image_type_edge_cases&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_coding.py::test_sniff_image_type_edge_cases&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_coding.py::test_sniff_image_type_edge_cases&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_controls.py::test_rate_limit_ip_exceeded&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_rate_limit_ip_exceeded&#34;, &#34;duration&#34;: &#34;15 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_rate_limit_ip_exceeded&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;15 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,034 - app.src.rfc7807_handler - WARNING - [correlation_id=65c78c39-e61e-44f3-8721-035a9a195dd6] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:39,034 - app.src.rfc7807_handler - WARNING - [correlation_id=65c78c39-e61e-44f3-8721-035a9a195dd6] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:39,034 - app.src.rfc7807_handler - INFO - [correlation_id=65c78c39-e61e-44f3-8721-035a9a195dd6] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:39,035 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n2025-11-26 01:42:39,036 - app.src.rfc7807_handler - WARNING - [correlation_id=51fd7220-e3db-41e4-a70a-a578e3e76adf] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:39,036 - app.src.rfc7807_handler - WARNING - [correlation_id=51fd7220-e3db-41e4-a70a-a578e3e76adf] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:39,036 - app.src.rfc7807_handler - INFO - [correlation_id=51fd7220-e3db-41e4-a70a-a578e3e76adf] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:39,037 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n2025-11-26 01:42:39,038 - app.src.rfc7807_handler - WARNING - [correlation_id=2a948e00-7bce-4a0c-9e09-99cdba420f8c] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:39,038 - app.src.rfc7807_handler - WARNING - [correlation_id=2a948e00-7bce-4a0c-9e09-99cdba420f8c] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:39,039 - app.src.rfc7807_handler - INFO - [correlation_id=2a948e00-7bce-4a0c-9e09-99cdba420f8c] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:39,040 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n2025-11-26 01:42:39,041 - app.src.rfc7807_handler - WARNING - [correlation_id=d1d03a37-0833-425d-ac04-bee1b9bbb40e] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:39,041 - app.src.rfc7807_handler - WARNING - [correlation_id=d1d03a37-0833-425d-ac04-bee1b9bbb40e] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:39,041 - app.src.rfc7807_handler - INFO - [correlation_id=d1d03a37-0833-425d-ac04-bee1b9bbb40e] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:39,042 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n2025-11-26 01:42:39,043 - app.src.rfc7807_handler - WARNING - [correlation_id=bf683ced-0a3e-467f-abea-1d03d31d008f] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:39,043 - app.src.rfc7807_handler - WARNING - [correlation_id=bf683ced-0a3e-467f-abea-1d03d31d008f] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:39,043 - app.src.rfc7807_handler - INFO - [correlation_id=bf683ced-0a3e-467f-abea-1d03d31d008f] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:39,044 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n2025-11-26 01:42:39,046 - app.src.rfc7807_handler - WARNING - [correlation_id=a6e6a6ad-a306-48c4-b597-1daede3fa972] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,046 - app.src.rfc7807_handler - INFO - [correlation_id=a6e6a6ad-a306-48c4-b597-1daede3fa972] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,047 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=65c78c39-e61e-44f3-8721-035a9a195dd6] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=65c78c39-e61e-44f3-8721-035a9a195dd6] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=65c78c39-e61e-44f3-8721-035a9a195dd6] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=51fd7220-e3db-41e4-a70a-a578e3e76adf] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=51fd7220-e3db-41e4-a70a-a578e3e76adf] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=51fd7220-e3db-41e4-a70a-a578e3e76adf] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=2a948e00-7bce-4a0c-9e09-99cdba420f8c] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=2a948e00-7bce-4a0c-9e09-99cdba420f8c] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=2a948e00-7bce-4a0c-9e09-99cdba420f8c] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=d1d03a37-0833-425d-ac04-bee1b9bbb40e] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=d1d03a37-0833-425d-ac04-bee1b9bbb40e] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=d1d03a37-0833-425d-ac04-bee1b9bbb40e] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=bf683ced-0a3e-467f-abea-1d03d31d008f] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=bf683ced-0a3e-467f-abea-1d03d31d008f] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=bf683ced-0a3e-467f-abea-1d03d31d008f] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a6e6a6ad-a306-48c4-b597-1daede3fa972] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a6e6a6ad-a306-48c4-b597-1daede3fa972] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n\n&#34;}], &#34;tests/test_secure_controls.py::test_rate_limit_account_exceeded&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_rate_limit_account_exceeded&#34;, &#34;duration&#34;: &#34;45 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_rate_limit_account_exceeded&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;45 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,049 - app.src.rfc7807_handler - WARNING - [correlation_id=3637623e-ea5a-4baf-a4ec-eadc5040a493] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:39,049 - app.src.rfc7807_handler - WARNING - [correlation_id=3637623e-ea5a-4baf-a4ec-eadc5040a493] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:39,049 - app.src.rfc7807_handler - INFO - [correlation_id=3637623e-ea5a-4baf-a4ec-eadc5040a493] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:39,050 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n2025-11-26 01:42:39,051 - app.src.rfc7807_handler - WARNING - [correlation_id=6ade269d-35fc-4a44-bf95-befe06e54b74] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:39,051 - app.src.rfc7807_handler - WARNING - [correlation_id=6ade269d-35fc-4a44-bf95-befe06e54b74] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:39,051 - app.src.rfc7807_handler - INFO - [correlation_id=6ade269d-35fc-4a44-bf95-befe06e54b74] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:39,052 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n2025-11-26 01:42:39,053 - app.src.rfc7807_handler - WARNING - [correlation_id=0a04c81f-bad9-4e81-9b93-51f671bd69ae] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:39,053 - app.src.rfc7807_handler - WARNING - [correlation_id=0a04c81f-bad9-4e81-9b93-51f671bd69ae] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:39,053 - app.src.rfc7807_handler - INFO - [correlation_id=0a04c81f-bad9-4e81-9b93-51f671bd69ae] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:39,054 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n2025-11-26 01:42:39,055 - app.src.rfc7807_handler - WARNING - [correlation_id=eeaece55-4240-4cad-ac2f-beab00e90ee2] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:39,055 - app.src.rfc7807_handler - WARNING - [correlation_id=eeaece55-4240-4cad-ac2f-beab00e90ee2] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:39,056 - app.src.rfc7807_handler - INFO - [correlation_id=eeaece55-4240-4cad-ac2f-beab00e90ee2] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:39,056 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n2025-11-26 01:42:39,058 - app.src.rfc7807_handler - WARNING - [correlation_id=2de8844a-42d2-4eea-8b62-4314b0849df3] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:39,058 - app.src.rfc7807_handler - WARNING - [correlation_id=2de8844a-42d2-4eea-8b62-4314b0849df3] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:39,058 - app.src.rfc7807_handler - INFO - [correlation_id=2de8844a-42d2-4eea-8b62-4314b0849df3] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:39,059 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n2025-11-26 01:42:39,060 - app.src.rfc7807_handler - WARNING - [correlation_id=009569bd-511b-4039-8140-302857df34d7] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,060 - app.src.rfc7807_handler - INFO - [correlation_id=009569bd-511b-4039-8140-302857df34d7] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,061 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,062 - app.src.rfc7807_handler - WARNING - [correlation_id=1261d674-bc28-4fa6-9b48-707fed10d302] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,062 - app.src.rfc7807_handler - INFO - [correlation_id=1261d674-bc28-4fa6-9b48-707fed10d302] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,063 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,064 - app.src.rfc7807_handler - WARNING - [correlation_id=f8d3a536-d74e-41e8-98f0-da363409d36d] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,064 - app.src.rfc7807_handler - INFO - [correlation_id=f8d3a536-d74e-41e8-98f0-da363409d36d] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,065 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,066 - app.src.rfc7807_handler - WARNING - [correlation_id=35f4b0ff-263f-4699-9a3c-62a4ddb9f1ab] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,066 - app.src.rfc7807_handler - INFO - [correlation_id=35f4b0ff-263f-4699-9a3c-62a4ddb9f1ab] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,067 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,068 - app.src.rfc7807_handler - WARNING - [correlation_id=aa3905a9-991b-4d5d-b2f4-c614963cdf4c] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,068 - app.src.rfc7807_handler - INFO - [correlation_id=aa3905a9-991b-4d5d-b2f4-c614963cdf4c] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,069 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,070 - app.src.rfc7807_handler - WARNING - [correlation_id=c5c6c0dd-9ea0-42ed-914c-4d779aa34237] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,070 - app.src.rfc7807_handler - INFO - [correlation_id=c5c6c0dd-9ea0-42ed-914c-4d779aa34237] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,071 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,072 - app.src.rfc7807_handler - WARNING - [correlation_id=198f4860-deea-43ea-901a-1f8632fca9bd] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,073 - app.src.rfc7807_handler - INFO - [correlation_id=198f4860-deea-43ea-901a-1f8632fca9bd] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,073 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,075 - app.src.rfc7807_handler - WARNING - [correlation_id=41f190a1-7113-4251-b046-db59a49de26e] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,075 - app.src.rfc7807_handler - INFO - [correlation_id=41f190a1-7113-4251-b046-db59a49de26e] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,076 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,077 - app.src.rfc7807_handler - WARNING - [correlation_id=6fc2c192-e29e-4aa2-a205-fdf25be0e93c] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,077 - app.src.rfc7807_handler - INFO - [correlation_id=6fc2c192-e29e-4aa2-a205-fdf25be0e93c] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,078 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,079 - app.src.rfc7807_handler - WARNING - [correlation_id=e60742cf-55ad-4f00-9877-3cf8395b7108] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,079 - app.src.rfc7807_handler - INFO - [correlation_id=e60742cf-55ad-4f00-9877-3cf8395b7108] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,080 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,081 - app.src.rfc7807_handler - WARNING - [correlation_id=6f7c3298-45a2-4acf-8cd7-8cd289fc0e3d] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,081 - app.src.rfc7807_handler - INFO - [correlation_id=6f7c3298-45a2-4acf-8cd7-8cd289fc0e3d] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,082 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,083 - app.src.rfc7807_handler - WARNING - [correlation_id=cbb283dc-962a-474f-833c-273351c8c781] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,083 - app.src.rfc7807_handler - INFO - [correlation_id=cbb283dc-962a-474f-833c-273351c8c781] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,084 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,085 - app.src.rfc7807_handler - WARNING - [correlation_id=dfd669f5-cc3d-4d01-9e8f-1fc66b7b1bbd] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,085 - app.src.rfc7807_handler - INFO - [correlation_id=dfd669f5-cc3d-4d01-9e8f-1fc66b7b1bbd] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,086 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,087 - app.src.rfc7807_handler - WARNING - [correlation_id=4ff3bc80-835f-4537-b1e7-3d8088d4acf0] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,087 - app.src.rfc7807_handler - INFO - [correlation_id=4ff3bc80-835f-4537-b1e7-3d8088d4acf0] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,088 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,089 - app.src.rfc7807_handler - WARNING - [correlation_id=f94e7047-755e-4912-8346-48e4125561c2] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,089 - app.src.rfc7807_handler - INFO - [correlation_id=f94e7047-755e-4912-8346-48e4125561c2] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,090 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n2025-11-26 01:42:39,091 - app.src.rfc7807_handler - WARNING - [correlation_id=f368deb8-0f78-4638-9d9e-cc6805eac43a] - Rate limit exceeded for IP - client_ip=testclient\n2025-11-26 01:42:39,092 - app.src.rfc7807_handler - INFO - [correlation_id=f368deb8-0f78-4638-9d9e-cc6805eac43a] - HTTP request - method=POST, url=http://testserver/login, status_code=429\n2025-11-26 01:42:39,092 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=3637623e-ea5a-4baf-a4ec-eadc5040a493] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=3637623e-ea5a-4baf-a4ec-eadc5040a493] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=3637623e-ea5a-4baf-a4ec-eadc5040a493] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=6ade269d-35fc-4a44-bf95-befe06e54b74] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=6ade269d-35fc-4a44-bf95-befe06e54b74] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=6ade269d-35fc-4a44-bf95-befe06e54b74] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=0a04c81f-bad9-4e81-9b93-51f671bd69ae] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=0a04c81f-bad9-4e81-9b93-51f671bd69ae] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=0a04c81f-bad9-4e81-9b93-51f671bd69ae] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=eeaece55-4240-4cad-ac2f-beab00e90ee2] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=eeaece55-4240-4cad-ac2f-beab00e90ee2] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=eeaece55-4240-4cad-ac2f-beab00e90ee2] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=2de8844a-42d2-4eea-8b62-4314b0849df3] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=2de8844a-42d2-4eea-8b62-4314b0849df3] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=2de8844a-42d2-4eea-8b62-4314b0849df3] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=009569bd-511b-4039-8140-302857df34d7] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=009569bd-511b-4039-8140-302857df34d7] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=1261d674-bc28-4fa6-9b48-707fed10d302] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=1261d674-bc28-4fa6-9b48-707fed10d302] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f8d3a536-d74e-41e8-98f0-da363409d36d] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f8d3a536-d74e-41e8-98f0-da363409d36d] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=35f4b0ff-263f-4699-9a3c-62a4ddb9f1ab] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=35f4b0ff-263f-4699-9a3c-62a4ddb9f1ab] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=aa3905a9-991b-4d5d-b2f4-c614963cdf4c] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=aa3905a9-991b-4d5d-b2f4-c614963cdf4c] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=c5c6c0dd-9ea0-42ed-914c-4d779aa34237] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=c5c6c0dd-9ea0-42ed-914c-4d779aa34237] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=198f4860-deea-43ea-901a-1f8632fca9bd] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=198f4860-deea-43ea-901a-1f8632fca9bd] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=41f190a1-7113-4251-b046-db59a49de26e] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=41f190a1-7113-4251-b046-db59a49de26e] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=6fc2c192-e29e-4aa2-a205-fdf25be0e93c] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=6fc2c192-e29e-4aa2-a205-fdf25be0e93c] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=e60742cf-55ad-4f00-9877-3cf8395b7108] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=e60742cf-55ad-4f00-9877-3cf8395b7108] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=6f7c3298-45a2-4acf-8cd7-8cd289fc0e3d] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=6f7c3298-45a2-4acf-8cd7-8cd289fc0e3d] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=cbb283dc-962a-474f-833c-273351c8c781] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=cbb283dc-962a-474f-833c-273351c8c781] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=dfd669f5-cc3d-4d01-9e8f-1fc66b7b1bbd] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=dfd669f5-cc3d-4d01-9e8f-1fc66b7b1bbd] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=4ff3bc80-835f-4537-b1e7-3d8088d4acf0] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=4ff3bc80-835f-4537-b1e7-3d8088d4acf0] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f94e7047-755e-4912-8346-48e4125561c2] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f94e7047-755e-4912-8346-48e4125561c2] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f368deb8-0f78-4638-9d9e-cc6805eac43a] - Rate limit exceeded for IP - client_ip=testclient\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=f368deb8-0f78-4638-9d9e-cc6805eac43a] - HTTP request - method=POST, url=http://testserver/login, status_code=429\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n\n&#34;}], &#34;tests/test_secure_controls.py::test_integer_overflow_id_negative&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_integer_overflow_id_negative&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_integer_overflow_id_negative&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,094 - app.src.rfc7807_handler - WARNING - [correlation_id=a336f2a5-42b2-4b28-b8ca-ecf9aab2f800] - ApiError occurred - code=invalid_id, error_message=ID must be positive\n2025-11-26 01:42:39,095 - app.src.rfc7807_handler - INFO - [correlation_id=a336f2a5-42b2-4b28-b8ca-ecf9aab2f800] - HTTP request - method=GET, url=http://testserver/posts/-1, status_code=400\n2025-11-26 01:42:39,095 - httpx - INFO - HTTP Request: GET http://testserver/posts/-1 &amp;quot;HTTP/1.1 400 Bad Request&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a336f2a5-42b2-4b28-b8ca-ecf9aab2f800] - ApiError occurred - code=invalid_id, error_message=ID must be positive\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a336f2a5-42b2-4b28-b8ca-ecf9aab2f800] - HTTP request - method=GET, url=http://testserver/posts/-1, status_code=400\nINFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/posts/-1 &amp;quot;HTTP/1.1 400 Bad Request&amp;quot;\n\n&#34;}], &#34;tests/test_secure_controls.py::test_integer_overflow_id_too_large&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_integer_overflow_id_too_large&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_integer_overflow_id_too_large&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,097 - app.src.rfc7807_handler - WARNING - [correlation_id=6638548b-fc08-4dab-9f95-fed7fec45de7] - ApiError occurred - code=id_overflow, error_message=ID exceeds maximum value (214***47)\n2025-11-26 01:42:39,097 - app.src.rfc7807_handler - INFO - [correlation_id=6638548b-fc08-4dab-9f95-fed7fec45de7] - HTTP request - method=GET, url=http://testserver/posts/214***48, status_code=400\n2025-11-26 01:42:39,098 - httpx - INFO - HTTP Request: GET http://testserver/posts/2147483648 &amp;quot;HTTP/1.1 400 Bad Request&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=6638548b-fc08-4dab-9f95-fed7fec45de7] - ApiError occurred - code=id_overflow, error_message=ID exceeds maximum value (214***47)\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=6638548b-fc08-4dab-9f95-fed7fec45de7] - HTTP request - method=GET, url=http://testserver/posts/214***48, status_code=400\nINFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/posts/2147483648 &amp;quot;HTTP/1.1 400 Bad Request&amp;quot;\n\n&#34;}], &#34;tests/test_secure_controls.py::test_sql_injection_in_tag&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_sql_injection_in_tag&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_sql_injection_in_tag&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_controls.py::test_sql_injection_in_tag_filter&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_sql_injection_in_tag_filter&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_sql_injection_in_tag_filter&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,101 - app.src.rfc7807_handler - WARNING - [correlation_id=74486182-72c3-4195-9196-e7a005dd8eba] - ApiError occurred - code=invalid_tag, error_message=tag contains invalid characters\n2025-11-26 01:42:39,101 - app.src.rfc7807_handler - INFO - [correlation_id=74486182-72c3-4195-9196-e7a005dd8eba] - HTTP request - method=GET, url=http://testserver/posts?tag=&amp;#x27;;%20DROP%20TABLE%20posts;%20--, status_code=400\n2025-11-26 01:42:39,102 - httpx - INFO - HTTP Request: GET http://testserver/posts?tag=&amp;#x27;;%20DROP%20TABLE%20posts;%20-- &amp;quot;HTTP/1.1 400 Bad Request&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=74486182-72c3-4195-9196-e7a005dd8eba] - ApiError occurred - code=invalid_tag, error_message=tag contains invalid characters\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=74486182-72c3-4195-9196-e7a005dd8eba] - HTTP request - method=GET, url=http://testserver/posts?tag=&amp;#x27;;%20DROP%20TABLE%20posts;%20--, status_code=400\nINFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/posts?tag=&amp;#x27;;%20DROP%20TABLE%20posts;%20-- &amp;quot;HTTP/1.1 400 Bad Request&amp;quot;\n\n&#34;}], &#34;tests/test_secure_controls.py::test_tag_with_special_characters&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_tag_with_special_characters&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_tag_with_special_characters&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_controls.py::test_tag_too_long&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_tag_too_long&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_tag_too_long&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_controls.py::test_too_many_tags&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_too_many_tags&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_too_many_tags&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,106 - app.src.rfc7807_handler - INFO - [correlation_id=df2763ce-35e1-440d-9560-b746f448b33f] - Validation error occurred - errors={&amp;#x27;body.tags&amp;#x27;: &amp;#x27;List should have at most 10 items after validation, not 11&amp;#x27;}\n2025-11-26 01:42:39,106 - app.src.rfc7807_handler - INFO - [correlation_id=df2763ce-35e1-440d-9560-b746f448b33f] - HTTP request - method=POST, url=http://testserver/posts, status_code=422\n2025-11-26 01:42:39,107 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=df2763ce-35e1-440d-9560-b746f448b33f] - Validation error occurred - errors={&amp;#x27;body.tags&amp;#x27;: &amp;#x27;List should have at most 10 items after validation, not 11&amp;#x27;}\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=df2763ce-35e1-440d-9560-b746f448b33f] - HTTP request - method=POST, url=http://testserver/posts, status_code=422\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n&#34;}], &#34;tests/test_secure_controls.py::test_owner_only_update_unauthorized&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_owner_only_update_unauthorized&#34;, &#34;duration&#34;: &#34;6 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_owner_only_update_unauthorized&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;6 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,109 - app.src.rfc7807_handler - INFO - [correlation_id=bca6c18b-0b14-4a3f-a845-fc3ce37e6fa9] - Post created - post_id=8, status=draft, user_id=user1\n2025-11-26 01:42:39,109 - app.src.rfc7807_handler - INFO - [correlation_id=bca6c18b-0b14-4a3f-a845-fc3ce37e6fa9] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\n2025-11-26 01:42:39,110 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:39,111 - app.src.rfc7807_handler - WARNING - [correlation_id=00ebb68d-e96a-499b-b05c-604c1e44ec7d] - Unauthorized post update attempt - user_id=user2, post_id=8, owner=user1\n2025-11-26 01:42:39,112 - app.src.rfc7807_handler - WARNING - [correlation_id=00ebb68d-e96a-499b-b05c-604c1e44ec7d] - ApiError occurred - code=forbidden, error_message=You can only edit your own posts\n2025-11-26 01:42:39,112 - app.src.rfc7807_handler - INFO - [correlation_id=00ebb68d-e96a-499b-b05c-604c1e44ec7d] - HTTP request - method=PATCH, url=http://testserver/posts/8, status_code=403\n2025-11-26 01:42:39,113 - httpx - INFO - HTTP Request: PATCH http://testserver/posts/8 &amp;quot;HTTP/1.1 403 Forbidden&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=bca6c18b-0b14-4a3f-a845-fc3ce37e6fa9] - Post created - post_id=8, status=draft, user_id=user1\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=bca6c18b-0b14-4a3f-a845-fc3ce37e6fa9] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=00ebb68d-e96a-499b-b05c-604c1e44ec7d] - Unauthorized post update attempt - user_id=user2, post_id=8, owner=user1\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=00ebb68d-e96a-499b-b05c-604c1e44ec7d] - ApiError occurred - code=forbidden, error_message=You can only edit your own posts\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=00ebb68d-e96a-499b-b05c-604c1e44ec7d] - HTTP request - method=PATCH, url=http://testserver/posts/8, status_code=403\nINFO     httpx:_client.py:1038 HTTP Request: PATCH http://testserver/posts/8 &amp;quot;HTTP/1.1 403 Forbidden&amp;quot;\n\n&#34;}], &#34;tests/test_secure_controls.py::test_owner_only_delete_unauthorized&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_owner_only_delete_unauthorized&#34;, &#34;duration&#34;: &#34;5 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_owner_only_delete_unauthorized&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;5 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,115 - app.src.rfc7807_handler - INFO - [correlation_id=e09aeece-c8c5-4f68-b467-3b0ff4f595d6] - Post created - post_id=9, status=draft, user_id=user1\n2025-11-26 01:42:39,115 - app.src.rfc7807_handler - INFO - [correlation_id=e09aeece-c8c5-4f68-b467-3b0ff4f595d6] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\n2025-11-26 01:42:39,116 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:39,117 - app.src.rfc7807_handler - WARNING - [correlation_id=4846c8d5-1329-4968-a609-ba59328d28bc] - Unauthorized post delete attempt - user_id=user2, post_id=9, owner=user1\n2025-11-26 01:42:39,117 - app.src.rfc7807_handler - WARNING - [correlation_id=4846c8d5-1329-4968-a609-ba59328d28bc] - ApiError occurred - code=forbidden, error_message=You can only delete your own posts\n2025-11-26 01:42:39,117 - app.src.rfc7807_handler - INFO - [correlation_id=4846c8d5-1329-4968-a609-ba59328d28bc] - HTTP request - method=DELETE, url=http://testserver/posts/9, status_code=403\n2025-11-26 01:42:39,118 - httpx - INFO - HTTP Request: DELETE http://testserver/posts/9 &amp;quot;HTTP/1.1 403 Forbidden&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=e09aeece-c8c5-4f68-b467-3b0ff4f595d6] - Post created - post_id=9, status=draft, user_id=user1\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=e09aeece-c8c5-4f68-b467-3b0ff4f595d6] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=4846c8d5-1329-4968-a609-ba59328d28bc] - Unauthorized post delete attempt - user_id=user2, post_id=9, owner=user1\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=4846c8d5-1329-4968-a609-ba59328d28bc] - ApiError occurred - code=forbidden, error_message=You can only delete your own posts\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=4846c8d5-1329-4968-a609-ba59328d28bc] - HTTP request - method=DELETE, url=http://testserver/posts/9, status_code=403\nINFO     httpx:_client.py:1038 HTTP Request: DELETE http://testserver/posts/9 &amp;quot;HTTP/1.1 403 Forbidden&amp;quot;\n\n&#34;}], &#34;tests/test_secure_controls.py::test_invalid_status_filter&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_invalid_status_filter&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_invalid_status_filter&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,120 - app.src.rfc7807_handler - WARNING - [correlation_id=a9acd60f-f612-44f2-9f0b-47cd22fd4f6e] - ApiError occurred - code=invalid_status, error_message=status must be &amp;#x27;draft&amp;#x27; or &amp;#x27;published&amp;#x27;\n2025-11-26 01:42:39,120 - app.src.rfc7807_handler - INFO - [correlation_id=a9acd60f-f612-44f2-9f0b-47cd22fd4f6e] - HTTP request - method=GET, url=http://testserver/posts?status=invalid_status, status_code=400\n2025-11-26 01:42:39,121 - httpx - INFO - HTTP Request: GET http://testserver/posts?status=invalid_status &amp;quot;HTTP/1.1 400 Bad Request&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a9acd60f-f612-44f2-9f0b-47cd22fd4f6e] - ApiError occurred - code=invalid_status, error_message=status must be &amp;#x27;draft&amp;#x27; or &amp;#x27;published&amp;#x27;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a9acd60f-f612-44f2-9f0b-47cd22fd4f6e] - HTTP request - method=GET, url=http://testserver/posts?status=invalid_status, status_code=400\nINFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/posts?status=invalid_status &amp;quot;HTTP/1.1 400 Bad Request&amp;quot;\n\n&#34;}], &#34;tests/test_secure_controls.py::test_anonymous_post_creation_blocked&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_anonymous_post_creation_blocked&#34;, &#34;duration&#34;: &#34;5 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_anonymous_post_creation_blocked&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;5 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,123 - app.src.rfc7807_handler - WARNING - [correlation_id=a8848d04-bb06-45ff-aba0-3999b0ac0cd7] - Unauthorized post creation attempt: missing or anonymous user_id\n2025-11-26 01:42:39,123 - app.src.rfc7807_handler - WARNING - [correlation_id=a8848d04-bb06-45ff-aba0-3999b0ac0cd7] - ApiError occurred - code=authentication_required, error_message=Authentication required to create posts\n2025-11-26 01:42:39,123 - app.src.rfc7807_handler - INFO - [correlation_id=a8848d04-bb06-45ff-aba0-3999b0ac0cd7] - HTTP request - method=POST, url=http://testserver/posts, status_code=401\n2025-11-26 01:42:39,124 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n2025-11-26 01:42:39,125 - app.src.rfc7807_handler - WARNING - [correlation_id=ab9a5532-c288-4f65-9b12-55b2e64d5711] - Unauthorized post creation attempt: missing or anonymous user_id\n2025-11-26 01:42:39,125 - app.src.rfc7807_handler - WARNING - [correlation_id=ab9a5532-c288-4f65-9b12-55b2e64d5711] - ApiError occurred - code=authentication_required, error_message=Authentication required to create posts\n2025-11-26 01:42:39,125 - app.src.rfc7807_handler - INFO - [correlation_id=ab9a5532-c288-4f65-9b12-55b2e64d5711] - HTTP request - method=POST, url=http://testserver/posts, status_code=401\n2025-11-26 01:42:39,126 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a8848d04-bb06-45ff-aba0-3999b0ac0cd7] - Unauthorized post creation attempt: missing or anonymous user_id\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a8848d04-bb06-45ff-aba0-3999b0ac0cd7] - ApiError occurred - code=authentication_required, error_message=Authentication required to create posts\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=a8848d04-bb06-45ff-aba0-3999b0ac0cd7] - HTTP request - method=POST, url=http://testserver/posts, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=ab9a5532-c288-4f65-9b12-55b2e64d5711] - Unauthorized post creation attempt: missing or anonymous user_id\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=ab9a5532-c288-4f65-9b12-55b2e64d5711] - ApiError occurred - code=authentication_required, error_message=Authentication required to create posts\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=ab9a5532-c288-4f65-9b12-55b2e64d5711] - HTTP request - method=POST, url=http://testserver/posts, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n&#34;}], &#34;tests/test_secure_controls.py::test_authenticated_post_creation_allowed&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_authenticated_post_creation_allowed&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_authenticated_post_creation_allowed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,128 - app.src.rfc7807_handler - INFO - [correlation_id=0fb7c7e1-4be3-4540-a695-f309de5c05bb] - Post created - post_id=10, status=draft, user_id=user1\n2025-11-26 01:42:39,129 - app.src.rfc7807_handler - INFO - [correlation_id=0fb7c7e1-4be3-4540-a695-f309de5c05bb] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\n2025-11-26 01:42:39,130 - httpx - INFO - HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=0fb7c7e1-4be3-4540-a695-f309de5c05bb] - Post created - post_id=10, status=draft, user_id=user1\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=0fb7c7e1-4be3-4540-a695-f309de5c05bb] - HTTP request - method=POST, url=http://testserver/posts, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/posts &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n&#34;}], &#34;tests/test_secure_controls.py::test_rate_limit_reset_on_success&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_rate_limit_reset_on_success&#34;, &#34;duration&#34;: &#34;11 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_rate_limit_reset_on_success&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;11 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stderr call -----------------------------\n2025-11-26 01:42:39,131 - app.src.rfc7807_handler - WARNING - [correlation_id=00092712-15c5-4018-813e-5a93e6fa39c5] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:39,132 - app.src.rfc7807_handler - WARNING - [correlation_id=00092712-15c5-4018-813e-5a93e6fa39c5] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:39,132 - app.src.rfc7807_handler - INFO - [correlation_id=00092712-15c5-4018-813e-5a93e6fa39c5] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:39,133 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n2025-11-26 01:42:39,134 - app.src.rfc7807_handler - WARNING - [correlation_id=c8f07cac-6399-4b4b-834a-7fb2fbc0ffff] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:39,134 - app.src.rfc7807_handler - WARNING - [correlation_id=c8f07cac-6399-4b4b-834a-7fb2fbc0ffff] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:39,134 - app.src.rfc7807_handler - INFO - [correlation_id=c8f07cac-6399-4b4b-834a-7fb2fbc0ffff] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:39,135 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n2025-11-26 01:42:39,136 - app.src.rfc7807_handler - WARNING - [correlation_id=ba8962ba-6a3b-4868-8ba5-a575ec98b00e] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:39,136 - app.src.rfc7807_handler - WARNING - [correlation_id=ba8962ba-6a3b-4868-8ba5-a575ec98b00e] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:39,136 - app.src.rfc7807_handler - INFO - [correlation_id=ba8962ba-6a3b-4868-8ba5-a575ec98b00e] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:39,137 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n2025-11-26 01:42:39,138 - app.src.rfc7807_handler - INFO - [correlation_id=2646e11d-bffc-43bc-abd1-0ac61f5c6c8f] - Successful login for user - username=***MASKED***\n2025-11-26 01:42:39,138 - app.src.rfc7807_handler - INFO - [correlation_id=2646e11d-bffc-43bc-abd1-0ac61f5c6c8f] - JWT token issued, token: ***MASKED*** - username=***MASKED***\n2025-11-26 01:42:39,139 - app.src.rfc7807_handler - INFO - [correlation_id=2646e11d-bffc-43bc-abd1-0ac61f5c6c8f] - HTTP request - method=POST, url=http://testserver/login, status_code=200\n2025-11-26 01:42:39,139 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2025-11-26 01:42:39,140 - app.src.rfc7807_handler - WARNING - [correlation_id=8891247e-983c-4c5a-9eaf-5b4e054bb1d5] - Failed login attempt for user - username=***MASKED***\n2025-11-26 01:42:39,141 - app.src.rfc7807_handler - WARNING - [correlation_id=8891247e-983c-4c5a-9eaf-5b4e054bb1d5] - HTTPException occurred - status=401, exception_detail=Invalid username or password\n2025-11-26 01:42:39,141 - app.src.rfc7807_handler - INFO - [correlation_id=8891247e-983c-4c5a-9eaf-5b4e054bb1d5] - HTTP request - method=POST, url=http://testserver/login, status_code=401\n2025-11-26 01:42:39,141 - httpx - INFO - HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=00092712-15c5-4018-813e-5a93e6fa39c5] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=00092712-15c5-4018-813e-5a93e6fa39c5] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=00092712-15c5-4018-813e-5a93e6fa39c5] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=c8f07cac-6399-4b4b-834a-7fb2fbc0ffff] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=c8f07cac-6399-4b4b-834a-7fb2fbc0ffff] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=c8f07cac-6399-4b4b-834a-7fb2fbc0ffff] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=ba8962ba-6a3b-4868-8ba5-a575ec98b00e] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=ba8962ba-6a3b-4868-8ba5-a575ec98b00e] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=ba8962ba-6a3b-4868-8ba5-a575ec98b00e] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=2646e11d-bffc-43bc-abd1-0ac61f5c6c8f] - Successful login for user - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=2646e11d-bffc-43bc-abd1-0ac61f5c6c8f] - JWT token issued, token: ***MASKED*** - username=***MASKED***\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=2646e11d-bffc-43bc-abd1-0ac61f5c6c8f] - HTTP request - method=POST, url=http://testserver/login, status_code=200\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 200 OK&amp;quot;\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=8891247e-983c-4c5a-9eaf-5b4e054bb1d5] - Failed login attempt for user - username=***MASKED***\nWARNING  app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=8891247e-983c-4c5a-9eaf-5b4e054bb1d5] - HTTPException occurred - status=401, exception_detail=Invalid username or password\nINFO     app.src.rfc7807_handler:rfc7807_handler.py:70 [correlation_id=8891247e-983c-4c5a-9eaf-5b4e054bb1d5] - HTTP request - method=POST, url=http://testserver/login, status_code=401\nINFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n&#34;}], &#34;tests/test_secure_controls.py::test_create_access_token_default_expiry&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_create_access_token_default_expiry&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_create_access_token_default_expiry&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_controls.py::test_create_access_token_custom_expiry&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_create_access_token_custom_expiry&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_create_access_token_custom_expiry&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_controls.py::test_verify_token_valid&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_verify_token_valid&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_verify_token_valid&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_controls.py::test_verify_token_expired&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_verify_token_expired&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_verify_token_expired&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_controls.py::test_verify_token_invalid&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_verify_token_invalid&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_verify_token_invalid&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_controls.py::test_get_current_user_valid_token&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_get_current_user_valid_token&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_get_current_user_valid_token&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_controls.py::test_get_current_user_invalid_token&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_controls.py::test_get_current_user_invalid_token&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_controls.py::test_get_current_user_invalid_token&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_upload.py::test_sniff_image_type_ok_png&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_upload.py::test_sniff_image_type_ok_png&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_upload.py::test_sniff_image_type_ok_png&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_upload.py::test_sniff_image_type_ok_jpeg&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_upload.py::test_sniff_image_type_ok_jpeg&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_upload.py::test_sniff_image_type_ok_jpeg&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_upload.py::test_sniff_image_type_bad_type&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_upload.py::test_sniff_image_type_bad_type&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_upload.py::test_sniff_image_type_bad_type&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_upload.py::test_sniff_image_type_empty&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_upload.py::test_sniff_image_type_empty&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_upload.py::test_sniff_image_type_empty&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_upload.py::test_sniff_image_type_incomplete_jpeg&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_upload.py::test_sniff_image_type_incomplete_jpeg&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_upload.py::test_sniff_image_type_incomplete_jpeg&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_upload.py::test_secure_save_too_big&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_upload.py::test_secure_save_too_big&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_upload.py::test_secure_save_too_big&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_upload.py::test_secure_save_ok&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_upload.py::test_secure_save_ok&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_upload.py::test_secure_save_ok&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_upload.py::test_secure_save_jpeg&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_upload.py::test_secure_save_jpeg&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_upload.py::test_secure_save_jpeg&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_upload.py::test_secure_save_invalid_type&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_upload.py::test_secure_save_invalid_type&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_upload.py::test_secure_save_invalid_type&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_upload.py::test_secure_save_nonexistent_dir&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_upload.py::test_secure_save_nonexistent_dir&#34;, &#34;duration&#34;: &#34;0 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_upload.py::test_secure_save_nonexistent_dir&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;0 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_upload.py::test_secure_save_file_as_base_dir&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_upload.py::test_secure_save_file_as_base_dir&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_upload.py::test_secure_save_file_as_base_dir&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_secure_upload.py::test_secure_save_generates_unique_names&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_secure_upload.py::test_secure_save_generates_unique_names&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_secure_upload.py::test_secure_save_generates_unique_names&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}]}, &#34;renderCollapsed&#34;: [&#34;passed&#34;], &#34;initialSort&#34;: &#34;result&#34;, &#34;title&#34;: &#34;report.html&#34;}"></div>
+    <script>
+      (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const { getCollapsedCategory, setCollapsedIds } = require('./storage.js')
+
+class DataManager {
+    setManager(data) {
+        const collapsedCategories = [...getCollapsedCategory(data.renderCollapsed)]
+        const collapsedIds = []
+        const tests = Object.values(data.tests).flat().map((test, index) => {
+            const collapsed = collapsedCategories.includes(test.result.toLowerCase())
+            const id = `test_${index}`
+            if (collapsed) {
+                collapsedIds.push(id)
+            }
+            return {
+                ...test,
+                id,
+                collapsed,
+            }
+        })
+        const dataBlob = { ...data, tests }
+        this.data = { ...dataBlob }
+        this.renderData = { ...dataBlob }
+        setCollapsedIds(collapsedIds)
+    }
+
+    get allData() {
+        return { ...this.data }
+    }
+
+    resetRender() {
+        this.renderData = { ...this.data }
+    }
+
+    setRender(data) {
+        this.renderData.tests = [...data]
+    }
+
+    toggleCollapsedItem(id) {
+        this.renderData.tests = this.renderData.tests.map((test) =>
+            test.id === id ? { ...test, collapsed: !test.collapsed } : test,
+        )
+    }
+
+    set allCollapsed(collapsed) {
+        this.renderData = { ...this.renderData, tests: [...this.renderData.tests.map((test) => (
+            { ...test, collapsed }
+        ))] }
+    }
+
+    get testSubset() {
+        return [...this.renderData.tests]
+    }
+
+    get environment() {
+        return this.renderData.environment
+    }
+
+    get initialSort() {
+        return this.data.initialSort
+    }
+}
+
+module.exports = {
+    manager: new DataManager(),
+}
+
+},{"./storage.js":8}],2:[function(require,module,exports){
+const mediaViewer = require('./mediaviewer.js')
+const templateEnvRow = document.getElementById('template_environment_row')
+const templateResult = document.getElementById('template_results-table__tbody')
+
+function htmlToElements(html) {
+    const temp = document.createElement('template')
+    temp.innerHTML = html
+    return temp.content.childNodes
+}
+
+const find = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return elem.querySelector(selector)
+}
+
+const findAll = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return [...elem.querySelectorAll(selector)]
+}
+
+const dom = {
+    getStaticRow: (key, value) => {
+        const envRow = templateEnvRow.content.cloneNode(true)
+        const isObj = typeof value === 'object' && value !== null
+        const values = isObj ? Object.keys(value).map((k) => `${k}: ${value[k]}`) : null
+
+        const valuesElement = htmlToElements(
+            values ? `<ul>${values.map((val) => `<li>${val}</li>`).join('')}<ul>` : `<div>${value}</div>`)[0]
+        const td = findAll('td', envRow)
+        td[0].textContent = key
+        td[1].appendChild(valuesElement)
+
+        return envRow
+    },
+    getResultTBody: ({ testId, id, log, extras, resultsTableRow, tableHtml, result, collapsed }) => {
+        const resultBody = templateResult.content.cloneNode(true)
+        resultBody.querySelector('tbody').classList.add(result.toLowerCase())
+        resultBody.querySelector('tbody').id = testId
+        resultBody.querySelector('.collapsible').dataset.id = id
+
+        resultsTableRow.forEach((html) => {
+            const t = document.createElement('template')
+            t.innerHTML = html
+            resultBody.querySelector('.collapsible').appendChild(t.content)
+        })
+
+        if (log) {
+            // Wrap lines starting with "E" with span.error to color those lines red
+            const wrappedLog = log.replace(/^E.*$/gm, (match) => `<span class="error">${match}</span>`)
+            resultBody.querySelector('.log').innerHTML = wrappedLog
+        } else {
+            resultBody.querySelector('.log').remove()
+        }
+
+        if (collapsed) {
+            resultBody.querySelector('.collapsible > td')?.classList.add('collapsed')
+            resultBody.querySelector('.extras-row').classList.add('hidden')
+        } else {
+            resultBody.querySelector('.collapsible > td')?.classList.remove('collapsed')
+        }
+
+        const media = []
+        extras?.forEach(({ name, format_type, content }) => {
+            if (['image', 'video'].includes(format_type)) {
+                media.push({ path: content, name, format_type })
+            }
+
+            if (format_type === 'html') {
+                resultBody.querySelector('.extraHTML').insertAdjacentHTML('beforeend', `<div>${content}</div>`)
+            }
+        })
+        mediaViewer.setup(resultBody, media)
+
+        // Add custom html from the pytest_html_results_table_html hook
+        tableHtml?.forEach((item) => {
+            resultBody.querySelector('td[class="extra"]').insertAdjacentHTML('beforeend', item)
+        })
+
+        return resultBody
+    },
+}
+
+module.exports = {
+    dom,
+    htmlToElements,
+    find,
+    findAll,
+}
+
+},{"./mediaviewer.js":6}],3:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const storageModule = require('./storage.js')
+
+const getFilteredSubSet = (filter) =>
+    manager.allData.tests.filter(({ result }) => filter.includes(result.toLowerCase()))
+
+const doInitFilter = () => {
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+}
+
+const doFilter = (type, show) => {
+    if (show) {
+        storageModule.showCategory(type)
+    } else {
+        storageModule.hideCategory(type)
+    }
+
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+
+    const sortColumn = storageModule.getSort()
+    doSort(sortColumn, true)
+}
+
+module.exports = {
+    doFilter,
+    doInitFilter,
+}
+
+},{"./datamanager.js":1,"./sort.js":7,"./storage.js":8}],4:[function(require,module,exports){
+const { redraw, bindEvents, renderStatic } = require('./main.js')
+const { doInitFilter } = require('./filter.js')
+const { doInitSort } = require('./sort.js')
+const { manager } = require('./datamanager.js')
+const data = JSON.parse(document.getElementById('data-container').dataset.jsonblob)
+
+function init() {
+    manager.setManager(data)
+    doInitFilter()
+    doInitSort()
+    renderStatic()
+    redraw()
+    bindEvents()
+}
+
+init()
+
+},{"./datamanager.js":1,"./filter.js":3,"./main.js":5,"./sort.js":7}],5:[function(require,module,exports){
+const { dom, find, findAll } = require('./dom.js')
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const { doFilter } = require('./filter.js')
+const {
+    getVisible,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    getSortDirection,
+    possibleFilters,
+} = require('./storage.js')
+
+const removeChildren = (node) => {
+    while (node.firstChild) {
+        node.removeChild(node.firstChild)
+    }
+}
+
+const renderStatic = () => {
+    const renderEnvironmentTable = () => {
+        const environment = manager.environment
+        const rows = Object.keys(environment).map((key) => dom.getStaticRow(key, environment[key]))
+        const table = document.getElementById('environment')
+        removeChildren(table)
+        rows.forEach((row) => table.appendChild(row))
+    }
+    renderEnvironmentTable()
+}
+
+const addItemToggleListener = (elem) => {
+    elem.addEventListener('click', ({ target }) => {
+        const id = target.parentElement.dataset.id
+        manager.toggleCollapsedItem(id)
+
+        const collapsedIds = getCollapsedIds()
+        if (collapsedIds.includes(id)) {
+            const updated = collapsedIds.filter((item) => item !== id)
+            setCollapsedIds(updated)
+        } else {
+            collapsedIds.push(id)
+            setCollapsedIds(collapsedIds)
+        }
+        redraw()
+    })
+}
+
+const renderContent = (tests) => {
+    const sortAttr = getSort(manager.initialSort)
+    const sortAsc = JSON.parse(getSortDirection())
+    const rows = tests.map(dom.getResultTBody)
+    const table = document.getElementById('results-table')
+    const tableHeader = document.getElementById('results-table-head')
+
+    const newTable = document.createElement('table')
+    newTable.id = 'results-table'
+
+    // remove all sorting classes and set the relevant
+    findAll('.sortable', tableHeader).forEach((elem) => elem.classList.remove('asc', 'desc'))
+    tableHeader.querySelector(`.sortable[data-column-type="${sortAttr}"]`)?.classList.add(sortAsc ? 'desc' : 'asc')
+    newTable.appendChild(tableHeader)
+
+    if (!rows.length) {
+        const emptyTable = document.getElementById('template_results-table__body--empty').content.cloneNode(true)
+        newTable.appendChild(emptyTable)
+    } else {
+        rows.forEach((row) => {
+            if (!!row) {
+                findAll('.collapsible td:not(.col-links', row).forEach(addItemToggleListener)
+                find('.logexpander', row).addEventListener('click',
+                    (evt) => evt.target.parentNode.classList.toggle('expanded'),
+                )
+                newTable.appendChild(row)
+            }
+        })
+    }
+
+    table.replaceWith(newTable)
+}
+
+const renderDerived = () => {
+    const currentFilter = getVisible()
+    possibleFilters.forEach((result) => {
+        const input = document.querySelector(`input[data-test-result="${result}"]`)
+        input.checked = currentFilter.includes(result)
+    })
+}
+
+const bindEvents = () => {
+    const filterColumn = (evt) => {
+        const { target: element } = evt
+        const { testResult } = element.dataset
+
+        doFilter(testResult, element.checked)
+        const collapsedIds = getCollapsedIds()
+        const updated = manager.renderData.tests.map((test) => {
+            return {
+                ...test,
+                collapsed: collapsedIds.includes(test.id),
+            }
+        })
+        manager.setRender(updated)
+        redraw()
+    }
+
+    const header = document.getElementById('environment-header')
+    header.addEventListener('click', () => {
+        const table = document.getElementById('environment')
+        table.classList.toggle('hidden')
+        header.classList.toggle('collapsed')
+    })
+
+    findAll('input[name="filter_checkbox"]').forEach((elem) => {
+        elem.addEventListener('click', filterColumn)
+    })
+
+    findAll('.sortable').forEach((elem) => {
+        elem.addEventListener('click', (evt) => {
+            const { target: element } = evt
+            const { columnType } = element.dataset
+            doSort(columnType)
+            redraw()
+        })
+    })
+
+    document.getElementById('show_all_details').addEventListener('click', () => {
+        manager.allCollapsed = false
+        setCollapsedIds([])
+        redraw()
+    })
+    document.getElementById('hide_all_details').addEventListener('click', () => {
+        manager.allCollapsed = true
+        const allIds = manager.renderData.tests.map((test) => test.id)
+        setCollapsedIds(allIds)
+        redraw()
+    })
+}
+
+const redraw = () => {
+    const { testSubset } = manager
+
+    renderContent(testSubset)
+    renderDerived()
+}
+
+module.exports = {
+    redraw,
+    bindEvents,
+    renderStatic,
+}
+
+},{"./datamanager.js":1,"./dom.js":2,"./filter.js":3,"./sort.js":7,"./storage.js":8}],6:[function(require,module,exports){
+class MediaViewer {
+    constructor(assets) {
+        this.assets = assets
+        this.index = 0
+    }
+
+    nextActive() {
+        this.index = this.index === this.assets.length - 1 ? 0 : this.index + 1
+        return [this.activeFile, this.index]
+    }
+
+    prevActive() {
+        this.index = this.index === 0 ? this.assets.length - 1 : this.index -1
+        return [this.activeFile, this.index]
+    }
+
+    get currentIndex() {
+        return this.index
+    }
+
+    get activeFile() {
+        return this.assets[this.index]
+    }
+}
+
+
+const setup = (resultBody, assets) => {
+    if (!assets.length) {
+        resultBody.querySelector('.media').classList.add('hidden')
+        return
+    }
+
+    const mediaViewer = new MediaViewer(assets)
+    const container = resultBody.querySelector('.media-container')
+    const leftArrow = resultBody.querySelector('.media-container__nav--left')
+    const rightArrow = resultBody.querySelector('.media-container__nav--right')
+    const mediaName = resultBody.querySelector('.media__name')
+    const counter = resultBody.querySelector('.media__counter')
+    const imageEl = resultBody.querySelector('img')
+    const sourceEl = resultBody.querySelector('source')
+    const videoEl = resultBody.querySelector('video')
+
+    const setImg = (media, index) => {
+        if (media?.format_type === 'image') {
+            imageEl.src = media.path
+
+            imageEl.classList.remove('hidden')
+            videoEl.classList.add('hidden')
+        } else if (media?.format_type === 'video') {
+            sourceEl.src = media.path
+
+            videoEl.classList.remove('hidden')
+            imageEl.classList.add('hidden')
+        }
+
+        mediaName.innerText = media?.name
+        counter.innerText = `${index + 1} / ${assets.length}`
+    }
+    setImg(mediaViewer.activeFile, mediaViewer.currentIndex)
+
+    const moveLeft = () => {
+        const [media, index] = mediaViewer.prevActive()
+        setImg(media, index)
+    }
+    const doRight = () => {
+        const [media, index] = mediaViewer.nextActive()
+        setImg(media, index)
+    }
+    const openImg = () => {
+        window.open(mediaViewer.activeFile.path, '_blank')
+    }
+    if (assets.length === 1) {
+        container.classList.add('media-container--fullscreen')
+    } else {
+        leftArrow.addEventListener('click', moveLeft)
+        rightArrow.addEventListener('click', doRight)
+    }
+    imageEl.addEventListener('click', openImg)
+}
+
+module.exports = {
+    setup,
+}
+
+},{}],7:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const storageModule = require('./storage.js')
+
+const genericSort = (list, key, ascending, customOrder) => {
+    let sorted
+    if (customOrder) {
+        sorted = list.sort((a, b) => {
+            const aValue = a.result.toLowerCase()
+            const bValue = b.result.toLowerCase()
+
+            const aIndex = customOrder.findIndex((item) => item.toLowerCase() === aValue)
+            const bIndex = customOrder.findIndex((item) => item.toLowerCase() === bValue)
+
+            // Compare the indices to determine the sort order
+            return aIndex - bIndex
+        })
+    } else {
+        sorted = list.sort((a, b) => a[key] === b[key] ? 0 : a[key] > b[key] ? 1 : -1)
+    }
+
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const durationSort = (list, ascending) => {
+    const parseDuration = (duration) => {
+        if (duration.includes(':')) {
+            // If it's in the format "HH:mm:ss"
+            const [hours, minutes, seconds] = duration.split(':').map(Number)
+            return (hours * 3600 + minutes * 60 + seconds) * 1000
+        } else {
+            // If it's in the format "nnn ms"
+            return parseInt(duration)
+        }
+    }
+    const sorted = list.sort((a, b) => parseDuration(a['duration']) - parseDuration(b['duration']))
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const doInitSort = () => {
+    const type = storageModule.getSort(manager.initialSort)
+    const ascending = storageModule.getSortDirection()
+    const list = manager.testSubset
+    const initialOrder = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed', 'Skipped', 'Passed']
+
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    if (type?.toLowerCase() === 'original') {
+        manager.setRender(list)
+    } else {
+        let sortedList
+        switch (type) {
+        case 'duration':
+            sortedList = durationSort(list, ascending)
+            break
+        case 'result':
+            sortedList = genericSort(list, type, ascending, initialOrder)
+            break
+        default:
+            sortedList = genericSort(list, type, ascending)
+            break
+        }
+        manager.setRender(sortedList)
+    }
+}
+
+const doSort = (type, skipDirection) => {
+    const newSortType = storageModule.getSort(manager.initialSort) !== type
+    const currentAsc = storageModule.getSortDirection()
+    let ascending
+    if (skipDirection) {
+        ascending = currentAsc
+    } else {
+        ascending = newSortType ? false : !currentAsc
+    }
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    const list = manager.testSubset
+    const sortedList = type === 'duration' ? durationSort(list, ascending) : genericSort(list, type, ascending)
+    manager.setRender(sortedList)
+}
+
+module.exports = {
+    doInitSort,
+    doSort,
+}
+
+},{"./datamanager.js":1,"./storage.js":8}],8:[function(require,module,exports){
+const possibleFilters = [
+    'passed',
+    'skipped',
+    'failed',
+    'error',
+    'xfailed',
+    'xpassed',
+    'rerun',
+]
+
+const getVisible = () => {
+    const url = new URL(window.location.href)
+    const settings = new URLSearchParams(url.search).get('visible')
+    const lower = (item) => {
+        const lowerItem = item.toLowerCase()
+        if (possibleFilters.includes(lowerItem)) {
+            return lowerItem
+        }
+        return null
+    }
+    return settings === null ?
+        possibleFilters :
+        [...new Set(settings?.split(',').map(lower).filter((item) => item))]
+}
+
+const hideCategory = (categoryToHide) => {
+    const url = new URL(window.location.href)
+    const visibleParams = new URLSearchParams(url.search).get('visible')
+    const currentVisible = visibleParams ? visibleParams.split(',') : [...possibleFilters]
+    const settings = [...new Set(currentVisible)].filter((f) => f !== categoryToHide).join(',')
+
+    url.searchParams.set('visible', settings)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const showCategory = (categoryToShow) => {
+    if (typeof window === 'undefined') {
+        return
+    }
+    const url = new URL(window.location.href)
+    const currentVisible = new URLSearchParams(url.search).get('visible')?.split(',').filter(Boolean) ||
+        [...possibleFilters]
+    const settings = [...new Set([categoryToShow, ...currentVisible])]
+    const noFilter = possibleFilters.length === settings.length || !settings.length
+
+    noFilter ? url.searchParams.delete('visible') : url.searchParams.set('visible', settings.join(','))
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getSort = (initialSort) => {
+    const url = new URL(window.location.href)
+    let sort = new URLSearchParams(url.search).get('sort')
+    if (!sort) {
+        sort = initialSort || 'result'
+    }
+    return sort
+}
+
+const setSort = (type) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('sort', type)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getCollapsedCategory = (renderCollapsed) => {
+    let categories
+    if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        const collapsedItems = new URLSearchParams(url.search).get('collapsed')
+        switch (true) {
+        case !renderCollapsed && collapsedItems === null:
+            categories = ['passed']
+            break
+        case collapsedItems?.length === 0 || /^["']{2}$/.test(collapsedItems):
+            categories = []
+            break
+        case /^all$/.test(collapsedItems) || collapsedItems === null && /^all$/.test(renderCollapsed):
+            categories = [...possibleFilters]
+            break
+        default:
+            categories = collapsedItems?.split(',').map((item) => item.toLowerCase()) || renderCollapsed
+            break
+        }
+    } else {
+        categories = []
+    }
+    return categories
+}
+
+const getSortDirection = () => JSON.parse(sessionStorage.getItem('sortAsc')) || false
+const setSortDirection = (ascending) => sessionStorage.setItem('sortAsc', ascending)
+
+const getCollapsedIds = () => JSON.parse(sessionStorage.getItem('collapsedIds')) || []
+const setCollapsedIds = (list) => sessionStorage.setItem('collapsedIds', JSON.stringify(list))
+
+module.exports = {
+    getVisible,
+    hideCategory,
+    showCategory,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    setSort,
+    getSortDirection,
+    setSortDirection,
+    getCollapsedCategory,
+    possibleFilters,
+}
+
+},{}]},{},[4]);
+    </script>
+  </footer>
+</html>
