@@ -22,7 +22,7 @@ waivers:
     reference:
       - "https://avd.aquasec.com/nvd/cve-2025-8869"
       - "EVIDENCE/P09/sca_report.json"
-      - "https://github.com/vilina4ka/Secdev-Simple-Blog-Project/issues/123"
+      - "https://github.com/vilina4ka/Secdev-Simple-Blog-Project/issues/22"
     expires: "17-12-2025"
     status: accepted
-    approved_by: @vilina4ka
+    approved_by: "@vilina4ka"
