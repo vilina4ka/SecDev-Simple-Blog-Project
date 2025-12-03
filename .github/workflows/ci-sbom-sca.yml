@@ -51,7 +51,9 @@ jobs:
             -v "${{ github.workspace }}:/work" \
             -w /work \
             anchore/syft:${SYFT_VERSION} \
-            dir:. -o cyclonedx-json > EVIDENCE/P09/sbom.json
+            dir:. \
+            -o json=/work/EVIDENCE/P09/sbom-syft.json \
+            -o cyclonedx-json=/work/EVIDENCE/P09/sbom.json
 
       - name: Run SCA (Grype)
         env:
@@ -61,7 +63,7 @@ jobs:
             -v "${{ github.workspace }}:/work" \
             -w /work \
             anchore/grype:${GRYPE_VERSION} \
-            sbom:/work/EVIDENCE/P09/sbom.json -o json > EVIDENCE/P09/sca_report.json
+            sbom:/work/EVIDENCE/P09/sbom-syft.json -o json > EVIDENCE/P09/sca_report.json
 
       - name: Build SCA summary
         run: |
