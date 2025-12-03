@@ -185,3 +185,9 @@ tests/
 * [`SECURITY.md`](SECURITY.md)
 * [`.pre-commit-config.yaml`](.pre-commit-config.yaml)
 * [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+
+## Evidence & Security Automation
+
+- Workflow **Security - SBOM & SCA** (`.github/workflows/ci-sbom-sca.yml`) генерирует CycloneDX SBOM и отчёты SCA при каждом push/PR.
+- Артефакты сохраняются в `EVIDENCE/P09/` (`sbom.json`, `sca_report.json`, `sca_summary.md`).
+- Исключения и временные ваиверы документируются в `policy/waivers.yml` на основе политики из `project/69_sbom-vuln-mgmt.md`.

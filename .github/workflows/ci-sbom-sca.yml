@@ -1,0 +1,84 @@
+name: Security - SBOM & SCA
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/ci-sbom-sca.yml"
+      - "requirements*.txt"
+      - "pyproject.toml"
+      - "**/*.py"
+      - "policy/**"
+      - "EVIDENCE/P09/**"
+  pull_request:
+    paths:
+      - ".github/workflows/ci-sbom-sca.yml"
+      - "requirements*.txt"
+      - "pyproject.toml"
+      - "**/*.py"
+      - "policy/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sbom-sca-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sbom-sca:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare evidence directory
+        run: |
+          mkdir -p EVIDENCE/P09
+          ls -la EVIDENCE
+
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Generate SBOM (Syft)
+        env:
+          SYFT_VERSION: v1.9.0
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/work" \
+            -w /work \
+            anchore/syft:${SYFT_VERSION} \
+            dir:. -o cyclonedx-json > EVIDENCE/P09/sbom.json
+
+      - name: Run SCA (Grype)
+        env:
+          GRYPE_VERSION: v0.79.1
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/work" \
+            -w /work \
+            anchore/grype:${GRYPE_VERSION} \
+            sbom:/work/EVIDENCE/P09/sbom.json -o json > EVIDENCE/P09/sca_report.json
+
+      - name: Build SCA summary
+        run: |
+          echo "# SCA summary" > EVIDENCE/P09/sca_summary.md
+          echo "Generated: $(date -u)" >> EVIDENCE/P09/sca_summary.md
+          echo "" >> EVIDENCE/P09/sca_summary.md
+          jq '[.matches[].vulnerability.severity] | group_by(.) | map({(.[0]): length}) | add' \
+            EVIDENCE/P09/sca_report.json >> EVIDENCE/P09/sca_summary.md || true
+          echo "" >> EVIDENCE/P09/sca_summary.md
+          echo "Waivers tracked in policy/waivers.yml" >> EVIDENCE/P09/sca_summary.md
+
+      - name: Upload SBOM & SCA artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-p09-${{ github.run_id }}
+          path: |
+            EVIDENCE/P09/sbom.json
+            EVIDENCE/P09/sca_report.json
+            EVIDENCE/P09/sca_summary.md
+          if-no-files-found: error
