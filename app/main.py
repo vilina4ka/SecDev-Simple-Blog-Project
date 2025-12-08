@@ -46,10 +46,11 @@ def _bootstrap_users() -> Dict[str, str]:
     missing_vars = [env for env in env_map.values() if not os.getenv(env)]
     if missing_vars:
         raise RuntimeError(
-            "Missing required environment variables for bootstrap users: "
-            + ", ".join(missing_vars)
+            "Missing required environment variables for bootstrap users: " + ", ".join(missing_vars)
         )
-    return {username: hash_password(os.getenv(env_name, "")) for username, env_name in env_map.items()}
+    return {
+        username: hash_password(os.getenv(env_name, "")) for username, env_name in env_map.items()
+    }
 
 
 class CorrelationIdFilter(logging.Filter):
