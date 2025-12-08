@@ -227,7 +227,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         field = ".".join(str(loc) for loc in error["loc"])
         errors[field] = error["msg"]
 
-    safe_log(logging.INFO, "Validation error occurred", correlation_id=cid, errors=str(errors))
+    safe_log(
+        logging.INFO,
+        "Validation error occurred",
+        correlation_id=cid,
+        errors=str(errors),
+    )
 
     return problem(
         status=422,
