@@ -8,7 +8,9 @@ def normalize_unicode(text: str) -> str:
     if not text:
         return text
     text = unicodedata.normalize("NFC", text)
-    text = "".join(c for c in text if unicodedata.category(c)[0] != "C" or c in "\n\r\t ")
+    text = "".join(
+        c for c in text if unicodedata.category(c)[0] != "C" or c in "\n\r\t "
+    )
     return text.strip()
 
 
@@ -112,7 +114,9 @@ def validate_tag(tag: str) -> str:
             raise ValueError("tag contains invalid characters")
 
     if not all(c.isalnum() or c in "-_" for c in normalized):
-        raise ValueError("tag can only contain letters, numbers, hyphens and underscores")
+        raise ValueError(
+            "tag can only contain letters, numbers, hyphens and underscores"
+        )
 
     if len(normalized) > 50:
         raise ValueError("tag must be at most 50 characters")
