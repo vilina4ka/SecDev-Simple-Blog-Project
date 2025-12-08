@@ -62,7 +62,6 @@ def _bootstrap_users() -> Dict[str, str]:
 
 
 class CorrelationIdFilter(logging.Filter):
-
     def filter(self, record):
         record.correlation_id = correlation_id_ctx.get() or "N/A"
         return True
@@ -130,7 +129,6 @@ class PIIMaskingMiddleware(BaseHTTPMiddleware):
 
 
 class JWTMiddleware(BaseHTTPMiddleware):
-
     async def dispatch(self, request: StarletteRequest, call_next):
         auth_header = request.headers.get("Authorization")
         user_id = None
@@ -271,7 +269,9 @@ async def general_exception_handler(request: Request, exc: Exception):
     return problem(
         status=500,
         title="Internal Server Error",
-        detail="An internal error occurred. Please contact support with correlation_id.",
+        detail=(
+            "An internal error occurred. " "Please contact support with correlation_id."
+        ),
         type_="https://example.com/problems/internal-error",
         correlation_id=cid,
         instance=str(request.url.path),
@@ -565,7 +565,10 @@ async def login(request: Request, user: UserLogin):
         response = problem(
             status=429,
             title="Too Many Requests",
-            detail=f"Too many requests. Please try again after {int(ip_retry_after or 0)} seconds.",
+            detail=(
+                f"Too many requests. "
+                f"Please try again after {int(ip_retry_after or 0)} seconds."
+            ),
             type_="https://example.com/problems/rate-limit-exceeded",
             correlation_id=cid,
             instance=str(request.url.path),

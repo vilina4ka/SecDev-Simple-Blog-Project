@@ -102,9 +102,6 @@ def test_path_traversal_attack(tmp_path: Path):
     # Создаем базовую директорию
     base_dir = tmp_path / "uploads"
     base_dir.mkdir()
-
-    # Пытаемся использовать path traversal через имя файла
-    # secure_save генерирует имя автоматически, но проверим защиту через os.path.commonpath
     png_data = b"\x89PNG\r\n\x1a\n" + b"data"
 
     # Попытка создать файл вне базовой директории через относительный путь
@@ -184,7 +181,7 @@ def test_pii_masking():
     text = f"Token: {jwt}"
     masked = mask_pii(text)
     assert jwt not in masked
-    # JWT должен быть замаскирован (либо как JWT_TOKEN_MASKED, либо через password pattern)
+    # JWT должен быть замаскирован
     assert "JWT_TOKEN_MASKED" in masked or "***MASKED***" in masked
 
     # Пароль

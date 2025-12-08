@@ -58,7 +58,6 @@ def test_rate_limit_account_exceeded():
                     i >= 4
                 ), f"IP rate limit should trigger after 5 requests, got at {i}"
             elif "Too many login attempts" in detail:
-
                 account_limit_hit = True
                 assert (
                     i >= 19
@@ -89,7 +88,7 @@ def test_integer_overflow_id_negative():
 
 
 def test_integer_overflow_id_too_large():
-    """Негативный тест: ID превышает максимальное значение (защита от integer overflow)."""
+    """Негативный тест: ID превышает максимальное значение."""
     large_id = 2147483648
     resp = client.get(f"/posts/{large_id}")
     assert resp.status_code == 400
@@ -212,7 +211,7 @@ def test_invalid_status_filter():
 
 
 def test_anonymous_post_creation_blocked():
-    """Негативный тест: анонимный пользователь не может создавать посты (NFR-01, ADR-002)."""
+    """Негативный тест: аноним не может создавать посты (NFR-01, ADR-002)."""
     resp = client.post(
         "/posts",
         json={
