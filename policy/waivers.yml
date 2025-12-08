@@ -1,0 +1,28 @@
+waivers:
+  - id: policy:no-findings-2025Q4
+    package: all
+    severity: any
+    version_range: "*"
+    justification: >
+      Grype v0.79.1 (db 2025-12-02) не обнаружил уязвимостей в зависимостях проекта.
+      Политика: Critical/High — фикс немедленно; Medium — до 14 дней; Low — при плановом обновлении.
+    reference: EVIDENCE/P09/sca_report.json
+    expires: "31-12-2025"
+    status: noted
+  - id: CVE-2025-8869
+    package: pip
+    version_range: "<25.3"
+    severity: medium
+    justification: |
+      Уязвимость в pip 24.0 позволяет злоумышленнику подменять файлы через
+      символические ссылки при установке пакетов. В проекте pip используется
+      только в CI/CD для установки зависимостей из PyPI по HTTPS, поэтому
+      эксплуатация ограничена.
+    mitigation_plan: "Обновить базовый образ CI и pip до версии 25.3 до 17-12-2025."
+    reference:
+      - "https://avd.aquasec.com/nvd/cve-2025-8869"
+      - "EVIDENCE/P09/sca_report.json"
+      - "https://github.com/vilina4ka/Secdev-Simple-Blog-Project/issues/22"
+    expires: "17-12-2025"
+    status: accepted
+    approved_by: "@vilina4ka"
