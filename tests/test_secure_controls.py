@@ -1,10 +1,11 @@
 from datetime import timedelta
 
 import pytest
+from fastapi.testclient import TestClient
+
 from app.core.auth import create_access_token, get_current_user, verify_token
 from app.main import app
 from app.src.schemas import validate_tag
-from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
