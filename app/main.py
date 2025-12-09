@@ -23,9 +23,7 @@ from app.src.schemas import ItemCreate, PostCreate, PostUpdate, UserLogin, UserR
 
 load_dotenv()
 
-correlation_id_ctx: ContextVar[Optional[str]] = ContextVar(
-    "correlation_id", default=None
-)
+correlation_id_ctx: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
 
 PASSWORD_PEPPER = os.getenv("APP_PASSWORD_PEPPER", "dev-pepper-change-me")
 
@@ -52,12 +50,10 @@ def _bootstrap_users() -> Dict[str, str]:
     missing_vars = [env for env in env_map.values() if not os.getenv(env)]
     if missing_vars:
         raise RuntimeError(
-            "Missing required environment variables for bootstrap users: "
-            + ", ".join(missing_vars)
+            "Missing required environment variables for bootstrap users: " + ", ".join(missing_vars)
         )
     return {
-        username: hash_password(os.getenv(env_name, ""))
-        for username, env_name in env_map.items()
+        username: hash_password(os.getenv(env_name, "")) for username, env_name in env_map.items()
     }
 
 
@@ -163,9 +159,7 @@ async def api_error_handler(request: Request, exc: ApiError):
     cid = correlation_id_ctx.get()
 
     if exc.status >= 500:
-        detail = (
-            "An internal error occurred. Please contact support with correlation_id."
-        )
+        detail = "An internal error occurred. Please contact support with correlation_id."
         safe_log(
             logging.ERROR,
             "ApiError occurred",
@@ -199,9 +193,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     detail = exc.detail if isinstance(exc.detail, str) else "http_error"
 
     if exc.status_code >= 500:
-        detail = (
-            "An internal error occurred. Please contact support with correlation_id."
-        )
+        detail = "An internal error occurred. Please contact support with correlation_id."
         safe_log(
             logging.ERROR,
             "HTTPException occurred",
@@ -269,9 +261,7 @@ async def general_exception_handler(request: Request, exc: Exception):
     return problem(
         status=500,
         title="Internal Server Error",
-        detail=(
-            "An internal error occurred. " "Please contact support with correlation_id."
-        ),
+        detail=("An internal error occurred. " "Please contact support with correlation_id."),
         type_="https://example.com/problems/internal-error",
         correlation_id=cid,
         instance=str(request.url.path),
@@ -372,9 +362,7 @@ def create_post(post: PostCreate, request: Request):
 
 
 @app.get("/posts", include_in_schema=False)
-def list_posts(
-    request: Request, status: Optional[str] = None, tag: Optional[str] = None
-):
+def list_posts(request: Request, status: Optional[str] = None, tag: Optional[str] = None):
     user_id = getattr(request.state, "user_id", None) or "anonymous"
 
     posts = [p for p in _DB["posts"] if p.get("user_id") == user_id]
@@ -449,9 +437,7 @@ def update_post(post_id: int, post_update: PostUpdate, request: Request):
             post_id=post_id,
             owner=post.get("user_id"),
         )
-        raise ApiError(
-            code="forbidden", message="You can only edit your own posts", status=403
-        )
+        raise ApiError(code="forbidden", message="You can only edit your own posts", status=403)
 
     if post_update.title is not None:
         post["title"] = post_update.title
@@ -498,9 +484,7 @@ def delete_post(post_id: int, request: Request):
             post_id=post_id,
             owner=post.get("user_id"),
         )
-        raise ApiError(
-            code="forbidden", message="You can only delete your own posts", status=403
-        )
+        raise ApiError(code="forbidden", message="You can only delete your own posts", status=403)
 
     _DB["posts"].pop(post_index)
 
@@ -566,8 +550,7 @@ async def login(request: Request, user: UserLogin):
             status=429,
             title="Too Many Requests",
             detail=(
-                f"Too many requests. "
-                f"Please try again after {int(ip_retry_after or 0)} seconds."
+                f"Too many requests. " f"Please try again after {int(ip_retry_after or 0)} seconds."
             ),
             type_="https://example.com/problems/rate-limit-exceeded",
             correlation_id=cid,

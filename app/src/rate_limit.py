@@ -53,15 +53,11 @@ def check_ip_rate_limit(ip: str) -> Tuple[bool, Optional[float]]:
 
 
 def check_account_rate_limit(username: str) -> Tuple[bool, Optional[float]]:
-    return check_rate_limit(
-        f"account:{username}", MAX_ATTEMPTS_PER_ACCOUNT, ACCOUNT_WINDOW_SECONDS
-    )
+    return check_rate_limit(f"account:{username}", MAX_ATTEMPTS_PER_ACCOUNT, ACCOUNT_WINDOW_SECONDS)
 
 
 def reset_rate_limit(identifier: str):
     """Сбрасывает rate limit для идентификатора (при успешной аутентификации)."""
     for key in list(_rate_limit_store.keys()):
-        if key.startswith(f"ip:{identifier}") or key.startswith(
-            f"account:{identifier}"
-        ):
+        if key.startswith(f"ip:{identifier}") or key.startswith(f"account:{identifier}"):
             del _rate_limit_store[key]
