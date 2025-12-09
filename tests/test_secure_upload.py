@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import pytest
-
 from app.src.upload_secure import secure_save, sniff_image_type
 
 

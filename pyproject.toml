@@ -1,14 +1,21 @@
 [tool.ruff]
-line-length = 100
+line-length = 88
 target-version = "py311"
 exclude = ["venv",".venv","build","dist"]
 
 [tool.ruff.lint]
 select = ["E","F","W","I"]
 
+[tool.ruff.lint.isort]
+known-third-party = ["app"]
+
 [tool.isort]
 profile = "black"
-line_length = 100
+line_length = 88
+known_third_party = ["app"]
+multi_line_output = 3
+include_trailing_comma = true
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
 [tool.bandit]
 exclude_dirs = ["venv", ".venv", "build", "dist", "tests"]
@@ -45,7 +52,7 @@ exclude_lines = [
 ]
 
 [tool.black]
-line-length = 100
+line-length = 88
 
 [build-system]
 requires = ["setuptools", "wheel"]
