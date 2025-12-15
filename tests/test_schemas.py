@@ -1,8 +1,6 @@
 """Тесты для Pydantic схем и валидации данных."""
 
 import pytest
-from pydantic import ValidationError
-
 from app.src.schemas import (
     ItemCreate,
     PostCreate,
@@ -11,6 +9,7 @@ from app.src.schemas import (
     normalize_unicode,
     validate_tag,
 )
+from pydantic import ValidationError
 
 
 def test_normalize_unicode_basic():

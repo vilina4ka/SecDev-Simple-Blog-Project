@@ -1,23 +1,66 @@
+import hashlib
+import hmac
 import logging
+import os
 from contextvars import ContextVar
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from app.core.auth import create_access_token, get_current_user
+from app.src.rate_limit import (
+    check_account_rate_limit,
+    check_ip_rate_limit,
+    reset_rate_limit,
+)
+from app.src.rfc7807_handler import problem, safe_log
+from app.src.schemas import ItemCreate, PostCreate, PostUpdate, UserLogin, UserRegister
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request as StarletteRequest
 
-from app.core.auth import create_access_token, get_current_user
-from app.src.rate_limit import check_account_rate_limit, check_ip_rate_limit, reset_rate_limit
-from app.src.rfc7807_handler import problem, safe_log
-from app.src.schemas import ItemCreate, PostCreate, PostUpdate, UserLogin, UserRegister
+load_dotenv()
 
-correlation_id_ctx: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
+correlation_id_ctx: ContextVar[Optional[str]] = ContextVar(
+    "correlation_id", default=None
+)
+
+PASSWORD_PEPPER = os.getenv("APP_PASSWORD_PEPPER", "dev-pepper-change-me")
+
+
+def hash_password(plain_text: str) -> str:
+    if not plain_text:
+        raise ValueError("Password cannot be empty")
+    payload = f"{plain_text}{PASSWORD_PEPPER}".encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def verify_password(plain_text: str, hashed_value: str) -> bool:
+    if not hashed_value:
+        return False
+    return hmac.compare_digest(hash_password(plain_text), hashed_value)
+
+
+def _bootstrap_users() -> Dict[str, str]:
+    env_map = {
+        "admin": "APP_ADMIN_PASSWORD",
+        "user1": "APP_USER1_PASSWORD",
+        "admin_reset": "APP_ADMIN_RESET_PASSWORD",
+    }
+    missing_vars = [env for env in env_map.values() if not os.getenv(env)]
+    if missing_vars:
+        raise RuntimeError(
+            "Missing required environment variables for bootstrap users: "
+            + ", ".join(missing_vars)
+        )
+    return {
+        username: hash_password(os.getenv(env_name, ""))
+        for username, env_name in env_map.items()
+    }
 
 
 class CorrelationIdFilter(logging.Filter):
-
     def filter(self, record):
         record.correlation_id = correlation_id_ctx.get() or "N/A"
         return True
@@ -85,7 +128,6 @@ class PIIMaskingMiddleware(BaseHTTPMiddleware):
 
 
 class JWTMiddleware(BaseHTTPMiddleware):
-
     async def dispatch(self, request: StarletteRequest, call_next):
         auth_header = request.headers.get("Authorization")
         user_id = None
@@ -120,7 +162,9 @@ async def api_error_handler(request: Request, exc: ApiError):
     cid = correlation_id_ctx.get()
 
     if exc.status >= 500:
-        detail = "An internal error occurred. Please contact support with correlation_id."
+        detail = (
+            "An internal error occurred. Please contact support with correlation_id."
+        )
         safe_log(
             logging.ERROR,
             "ApiError occurred",
@@ -154,7 +198,9 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     detail = exc.detail if isinstance(exc.detail, str) else "http_error"
 
     if exc.status_code >= 500:
-        detail = "An internal error occurred. Please contact support with correlation_id."
+        detail = (
+            "An internal error occurred. Please contact support with correlation_id."
+        )
         safe_log(
             logging.ERROR,
             "HTTPException occurred",
@@ -190,7 +236,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         field = ".".join(str(loc) for loc in error["loc"])
         errors[field] = error["msg"]
 
-    safe_log(logging.INFO, "Validation error occurred", correlation_id=cid, errors=str(errors))
+    safe_log(
+        logging.INFO,
+        "Validation error occurred",
+        correlation_id=cid,
+        errors=str(errors),
+    )
 
     return problem(
         status=422,
@@ -217,7 +268,9 @@ async def general_exception_handler(request: Request, exc: Exception):
     return problem(
         status=500,
         title="Internal Server Error",
-        detail="An internal error occurred. Please contact support with correlation_id.",
+        detail=(
+            "An internal error occurred. " "Please contact support with correlation_id."
+        ),
         type_="https://example.com/problems/internal-error",
         correlation_id=cid,
         instance=str(request.url.path),
@@ -318,7 +371,9 @@ def create_post(post: PostCreate, request: Request):
 
 
 @app.get("/posts", include_in_schema=False)
-def list_posts(request: Request, status: Optional[str] = None, tag: Optional[str] = None):
+def list_posts(
+    request: Request, status: Optional[str] = None, tag: Optional[str] = None
+):
     user_id = getattr(request.state, "user_id", None) or "anonymous"
 
     posts = [p for p in _DB["posts"] if p.get("user_id") == user_id]
@@ -393,7 +448,9 @@ def update_post(post_id: int, post_update: PostUpdate, request: Request):
             post_id=post_id,
             owner=post.get("user_id"),
         )
-        raise ApiError(code="forbidden", message="You can only edit your own posts", status=403)
+        raise ApiError(
+            code="forbidden", message="You can only edit your own posts", status=403
+        )
 
     if post_update.title is not None:
         post["title"] = post_update.title
@@ -440,7 +497,9 @@ def delete_post(post_id: int, request: Request):
             post_id=post_id,
             owner=post.get("user_id"),
         )
-        raise ApiError(code="forbidden", message="You can only delete your own posts", status=403)
+        raise ApiError(
+            code="forbidden", message="You can only delete your own posts", status=403
+        )
 
     _DB["posts"].pop(post_index)
 
@@ -455,11 +514,7 @@ def delete_post(post_id: int, request: Request):
     return {"message": "Post deleted successfully", "post_id": post_id}
 
 
-_USERS_DB = {
-    "admin": "password123",
-    "user1": "secret456",
-    "admin_reset": "password123",
-}
+_USERS_DB: Dict[str, str] = _bootstrap_users()
 
 
 @app.post("/register")
@@ -477,14 +532,14 @@ async def register(user: UserRegister):
             status=409,
         )
 
-    _USERS_DB[user.username] = user.password
+    _USERS_DB[user.username] = hash_password(user.password)
 
     safe_log(
         logging.INFO,
         "User registered successfully",
         correlation_id=correlation_id_ctx.get(),
         username=user.username,
-        password=user.password,
+        credentials_masked=True,
     )
 
     return {
@@ -509,7 +564,10 @@ async def login(request: Request, user: UserLogin):
         response = problem(
             status=429,
             title="Too Many Requests",
-            detail=f"Too many requests. Please try again after {int(ip_retry_after or 0)} seconds.",
+            detail=(
+                f"Too many requests. "
+                f"Please try again after {int(ip_retry_after or 0)} seconds."
+            ),
             type_="https://example.com/problems/rate-limit-exceeded",
             correlation_id=cid,
             instance=str(request.url.path),
@@ -538,7 +596,8 @@ async def login(request: Request, user: UserLogin):
         response.headers["Retry-After"] = str(int(account_retry_after or 0))
         return response
 
-    if user.username not in _USERS_DB or _USERS_DB[user.username] != user.password:
+    stored_hash = _USERS_DB.get(user.username)
+    if not stored_hash or not verify_password(user.password, stored_hash):
         safe_log(
             logging.WARNING,
             "Failed login attempt for user",
@@ -563,7 +622,7 @@ async def login(request: Request, user: UserLogin):
     # Логируем факт выдачи токена (для демонстрации JWT masking)
     safe_log(
         logging.INFO,
-        f"JWT token issued, token: {access_token}",
+        "JWT token issued",
         correlation_id=correlation_id_ctx.get(),
         username=user.username,
     )

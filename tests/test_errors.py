@@ -1,8 +1,7 @@
 """Тесты для обработки ошибок в формате RFC 7807."""
 
-from fastapi.testclient import TestClient
-
 from app.main import app
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 

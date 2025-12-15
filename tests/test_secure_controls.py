@@ -1,11 +1,10 @@
 from datetime import timedelta
 
 import pytest
-from fastapi.testclient import TestClient
-
 from app.core.auth import create_access_token, get_current_user, verify_token
 from app.main import app
 from app.src.schemas import validate_tag
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
@@ -17,11 +16,17 @@ def test_rate_limit_ip_exceeded():
     _rate_limit_store.clear()
 
     for i in range(6):
-        resp = client.post("/login", json={"username": f"user{i}", "password": "wrongpwd"})
+        resp = client.post(
+            "/login", json={"username": f"user{i}", "password": "wrongpwd"}
+        )
         if i < 5:
-            assert resp.status_code == 401, f"Request {i} should be 401, got {resp.status_code}"
+            assert (
+                resp.status_code == 401
+            ), f"Request {i} should be 401, got {resp.status_code}"
         else:
-            assert resp.status_code == 429, f"Request {i} should be 429, got {resp.status_code}"
+            assert (
+                resp.status_code == 429
+            ), f"Request {i} should be 429, got {resp.status_code}"
             assert "Retry-After" in resp.headers
             body = resp.json()
             assert "Too many requests" in body.get("detail", "")
@@ -38,7 +43,9 @@ def test_rate_limit_account_exceeded():
     account_limit_hit = False
 
     for i in range(21):
-        resp = client.post("/login", json={"username": username, "password": "wrongpwd"})
+        resp = client.post(
+            "/login", json={"username": username, "password": "wrongpwd"}
+        )
 
         if resp.status_code == 429:
             assert "Retry-After" in resp.headers
@@ -46,11 +53,14 @@ def test_rate_limit_account_exceeded():
             detail = body.get("detail", "")
             if "Too many requests" in detail and not ip_limit_hit:
                 ip_limit_hit = True
-                assert i >= 4, f"IP rate limit should trigger after 5 requests, got at {i}"
+                assert (
+                    i >= 4
+                ), f"IP rate limit should trigger after 5 requests, got at {i}"
             elif "Too many login attempts" in detail:
-
                 account_limit_hit = True
-                assert i >= 19, f"Account rate limit should trigger after 20 requests, got at {i}"
+                assert (
+                    i >= 19
+                ), f"Account rate limit should trigger after 20 requests, got at {i}"
         elif i < 5:
             assert resp.status_code in [
                 401,
@@ -62,7 +72,9 @@ def test_rate_limit_account_exceeded():
                 429,
             ], f"Request {i} should be 401 or 429, got {resp.status_code}"
 
-    assert ip_limit_hit or account_limit_hit, "At least one rate limit should have been triggered"
+    assert (
+        ip_limit_hit or account_limit_hit
+    ), "At least one rate limit should have been triggered"
 
 
 def test_integer_overflow_id_negative():
@@ -75,7 +87,7 @@ def test_integer_overflow_id_negative():
 
 
 def test_integer_overflow_id_too_large():
-    """Негативный тест: ID превышает максимальное значение (защита от integer overflow)."""
+    """Негативный тест: ID превышает максимальное значение."""
     large_id = 2147483648
     resp = client.get(f"/posts/{large_id}")
     assert resp.status_code == 400
@@ -190,13 +202,15 @@ def test_invalid_status_filter():
     body = resp.json()
     assert body["title"] == "Invalid Status"
     detail_lower = (
-        body["detail"].lower() if isinstance(body["detail"], str) else str(body["detail"]).lower()
+        body["detail"].lower()
+        if isinstance(body["detail"], str)
+        else str(body["detail"]).lower()
     )
     assert "draft" in detail_lower and "published" in detail_lower
 
 
 def test_anonymous_post_creation_blocked():
-    """Негативный тест: анонимный пользователь не может создавать посты (NFR-01, ADR-002)."""
+    """Негативный тест: аноним не может создавать посты (NFR-01, ADR-002)."""
     resp = client.post(
         "/posts",
         json={
@@ -251,13 +265,19 @@ def test_rate_limit_reset_on_success():
 
     _rate_limit_store.clear()
     for _ in range(3):
-        resp = client.post("/login", json={"username": "admin_reset", "password": "wrongpwd"})
+        resp = client.post(
+            "/login", json={"username": "admin_reset", "password": "wrongpwd"}
+        )
         assert resp.status_code == 401
 
-    resp = client.post("/login", json={"username": "admin_reset", "password": "password123"})
+    resp = client.post(
+        "/login", json={"username": "admin_reset", "password": "password123"}
+    )
     assert resp.status_code == 200
 
-    resp = client.post("/login", json={"username": "admin_reset", "password": "wrongpwd"})
+    resp = client.post(
+        "/login", json={"username": "admin_reset", "password": "wrongpwd"}
+    )
     assert resp.status_code == 401
     assert resp.status_code != 429
 

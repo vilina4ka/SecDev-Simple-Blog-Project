@@ -8,12 +8,13 @@ def normalize_unicode(text: str) -> str:
     if not text:
         return text
     text = unicodedata.normalize("NFC", text)
-    text = "".join(c for c in text if unicodedata.category(c)[0] != "C" or c in "\n\r\t ")
+    text = "".join(
+        c for c in text if unicodedata.category(c)[0] != "C" or c in "\n\r\t "
+    )
     return text.strip()
 
 
 class ItemCreate(BaseModel):
-
     name: str = Field(
         min_length=1,
         max_length=100,
@@ -32,7 +33,6 @@ class ItemCreate(BaseModel):
 
 
 class UserRegister(BaseModel):
-
     username: str = Field(
         min_length=3,
         max_length=50,
@@ -56,7 +56,8 @@ class UserRegister(BaseModel):
             raise ValueError("username must be at most 50 characters")
         if not all(c.isalnum() or c in "-_." for c in normalized):
             raise ValueError(
-                "username can only contain letters, numbers, hyphens, underscores and dots"
+                "username can only contain letters, numbers, hyphens, "
+                "underscores and dots"
             )
         return normalized.lower()
 
@@ -112,7 +113,9 @@ def validate_tag(tag: str) -> str:
             raise ValueError("tag contains invalid characters")
 
     if not all(c.isalnum() or c in "-_" for c in normalized):
-        raise ValueError("tag can only contain letters, numbers, hyphens and underscores")
+        raise ValueError(
+            "tag can only contain letters, numbers, hyphens and underscores"
+        )
 
     if len(normalized) > 50:
         raise ValueError("tag must be at most 50 characters")
@@ -121,7 +124,6 @@ def validate_tag(tag: str) -> str:
 
 
 class PostCreate(BaseModel):
-
     title: str = Field(
         min_length=1,
         max_length=256,

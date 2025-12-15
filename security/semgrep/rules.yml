@@ -1,0 +1,46 @@
+rules:
+  - id: secdev-python-os-system
+    languages:
+      - python
+    message: "os.system executes a shell command and inherits the environment. Prefer subprocess.run with explicit args."
+    metadata:
+      category: security
+      cwe: "CWE-78"
+      references:
+        - https://cwe.mitre.org/data/definitions/78.html
+    pattern-either:
+      - pattern: os.system($CMD)
+      - pattern: os.popen($CMD)
+    severity: WARNING
+
+  - id: secdev-python-subprocess-shell-true
+    languages:
+      - python
+    message: "Avoid subprocess use with shell=True to limit command injection."
+    metadata:
+      category: security
+      cwe: "CWE-78"
+      references:
+        - https://cwe.mitre.org/data/definitions/78.html
+    patterns:
+      - pattern: subprocess.$FUNC(..., shell=True, ...)
+      - metavariable-regex:
+          metavariable: "$FUNC"
+          regex: "(Popen|call|run|check_call|check_output|getoutput|getstatusoutput)"
+    severity: WARNING
+
+  - id: simpleblog-unsafe-safe_log-credentials
+    languages:
+      - python
+    message: "safe_log should never receive raw credentials or tokens."
+    metadata:
+      category: security
+      cwe: "CWE-532"
+      references:
+        - https://cwe.mitre.org/data/definitions/532.html
+      impact: "Leaking JWTs/passwords into logs makes credential stuffing trivial."
+    severity: ERROR
+    pattern-either:
+      - pattern: safe_log(..., password=$SECRET, ...)
+      - pattern: safe_log(..., access_token=$TOKEN, ...)
+      - pattern-regex: "safe_log\\([^\\n]+token[^\\n]+\\)"
