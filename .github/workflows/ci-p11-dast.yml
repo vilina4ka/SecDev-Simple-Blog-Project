@@ -54,8 +54,8 @@ jobs:
         env:
           ZAP_TARGET: http://localhost:8000
         run: |
-          docker run --rm --network host -v "$PWD":/zap/wrk owasp/zap2docker-stable \
-            zap-baseline.py \
+          docker run --rm --network host -v "$PWD":/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
+            /zap/zap-baseline.py \
               -t "${ZAP_TARGET}" \
               -r zap_baseline.html \
               -J zap_baseline.json \
@@ -63,6 +63,10 @@ jobs:
               -a \
               -d || true
           mv zap_baseline.* EVIDENCE/P11/ || true
+
+      - name: List evidence
+        if: always()
+        run: ls -l EVIDENCE/P11 || true
 
       - name: Stop app
         if: always()
