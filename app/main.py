@@ -277,8 +277,14 @@ async def general_exception_handler(request: Request, exc: Exception):
     )
 
 
-@app.get("/health")
+@app.get("/health", include_in_schema=False)
 def health():
+    return {"status": "ok"}
+
+
+@app.get("/healthz", include_in_schema=False)
+def healthz():
+    # Alias endpoint for CI/monitoring checks
     return {"status": "ok"}
 
 
