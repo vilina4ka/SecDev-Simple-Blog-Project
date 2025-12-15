@@ -40,7 +40,10 @@ jobs:
       - name: Run app
         env:
           APP_ENV: ci
-          JWT_SECRET_KEY: dev-secret-key-change-in-production
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET }}
+          APP_ADMIN_PASSWORD: ${{ secrets.APP_ADMIN_PASSWORD }}
+          APP_USER1_PASSWORD: ${{ secrets.APP_USER1_PASSWORD }}
+          APP_ADMIN_RESET_PASSWORD: ${{ secrets.APP_ADMIN_RESET_PASSWORD }}
         run: |
           uvicorn app.main:app --host 0.0.0.0 --port 8000 --log-level info &
           APP_PID=$!
@@ -74,4 +77,3 @@ jobs:
         with:
           name: P11_EVIDENCE
           path: EVIDENCE/P11
-
