@@ -60,17 +60,14 @@ jobs:
         env:
           ZAP_TARGET: http://localhost:8000
         run: |
-          MY_UID=$(id -u)
-          MY_GID=$(id -g)
-          docker run --rm --network host -u "${MY_UID}:${MY_GID}" -v "$PWD":/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
-            /zap/zap-baseline.py \
-              -t "${ZAP_TARGET}" \
+          docker run --rm --network host -u root -v "$PWD":/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
+            sh -c "chown -R zap:zap /zap/wrk && su zap -c '/zap/zap-baseline.py \
+              -t ${ZAP_TARGET} \
               -r zap_baseline.html \
               -J zap_baseline.json \
               -m 5 \
               -a \
-              -d || true
-          chmod 644 zap_baseline.* || true
+              -d' && chown zap:zap /zap/wrk/zap_baseline.*"
           mv zap_baseline.* EVIDENCE/P11/ || true
 
       - name: List evidence
