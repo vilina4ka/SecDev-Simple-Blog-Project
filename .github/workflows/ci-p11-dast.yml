@@ -46,7 +46,7 @@ jobs:
       - name: Run app
         env:
           APP_ENV: ci
-          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
           APP_ADMIN_PASSWORD: ${{ secrets.APP_ADMIN_PASSWORD }}
           APP_USER1_PASSWORD: ${{ secrets.APP_USER1_PASSWORD }}
           APP_ADMIN_RESET_PASSWORD: ${{ secrets.APP_ADMIN_RESET_PASSWORD }}
@@ -67,7 +67,7 @@ jobs:
               -J zap_baseline.json \
               -m 5 \
               -a \
-              -d' && chown zap:zap /zap/wrk/zap_baseline.*"
+              -d' && chmod 644 /zap/wrk/zap_baseline.*" || true
           mv zap_baseline.* EVIDENCE/P11/ || true
 
       - name: List evidence
