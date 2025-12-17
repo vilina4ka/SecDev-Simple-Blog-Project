@@ -60,9 +60,9 @@ jobs:
         env:
           ZAP_TARGET: http://localhost:8000
         run: |
-          UID=$(id -u)
-          GID=$(id -g)
-          docker run --rm --network host -u "${UID}:${GID}" -v "$PWD":/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
+          MY_UID=$(id -u)
+          MY_GID=$(id -g)
+          docker run --rm --network host -u "${MY_UID}:${MY_GID}" -v "$PWD":/zap/wrk ghcr.io/zaproxy/zaproxy:stable \
             /zap/zap-baseline.py \
               -t "${ZAP_TARGET}" \
               -r zap_baseline.html \
