@@ -61,6 +61,7 @@ jobs:
           ZAP_TARGET: http://localhost:8000
         run: |
           mkdir -p EVIDENCE/P11/zap-home
+          chmod -R 777 EVIDENCE/P11
 
           docker run --rm --network host \
             --user $(id -u):$(id -g) \
@@ -72,10 +73,10 @@ jobs:
               -t ${ZAP_TARGET} \
               -r zap_baseline.html \
               -J zap_baseline.json \
-              --output-summary /zap/wrk/zap_out.json \
               -m 5 \
               -a \
-              -d
+              -d \
+              -I
 
       - name: List evidence
         if: always()
