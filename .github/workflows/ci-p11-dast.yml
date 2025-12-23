@@ -60,17 +60,14 @@ jobs:
         env:
           ZAP_TARGET: http://localhost:8000
         run: |
-          mkdir -p EVIDENCE/P11/zap-home
+          mkdir -p EVIDENCE/P11
           chmod -R 777 EVIDENCE/P11
 
           docker run --rm --network host \
-            --user $(id -u):$(id -g) \
-            -e HOME=/zap/home \
-            -v "$PWD/EVIDENCE/P11":/zap/wrk \
-            -v "$PWD/EVIDENCE/P11/zap-home":/zap/home \
+            -v "$PWD/EVIDENCE/P11":/zap/wrk:rw \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
-              -t ${ZAP_TARGET} \
+              -t "${ZAP_TARGET}" \
               -r zap_baseline.html \
               -J zap_baseline.json \
               -m 5 \
