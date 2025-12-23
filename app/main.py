@@ -277,6 +277,11 @@ async def general_exception_handler(request: Request, exc: Exception):
     )
 
 
+@app.get("/", include_in_schema=False)
+def root():
+    return {"message": "Simple Blog API", "health": "/healthz"}
+
+
 @app.get("/health", include_in_schema=False)
 def health():
     return {"status": "ok"}
