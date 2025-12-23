@@ -154,9 +154,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
 
         # Настройка Cache-Control для всех ответов (устраняем Storable alert)
-        response.headers[
-            "Cache-Control"
-        ] = "no-store, no-cache, must-revalidate, private"
+        cache_control = "no-store, no-cache, must-revalidate, private"
+        response.headers["Cache-Control"] = cache_control
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
 
