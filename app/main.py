@@ -153,8 +153,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
 
-        # Настройка Cache-Control для API ответов
-        if request.url.path.startswith(("/items", "/posts", "/login", "/register")):
+        # Настройка Cache-Control для всех эндпоинтов
+        if request.url.path == "/" or request.url.path.startswith(
+            ("/items", "/posts", "/login", "/register", "/health")
+        ):
             response.headers["Cache-Control"] = (
                 "no-store, no-cache, must-revalidate, private"
             )
