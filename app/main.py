@@ -155,9 +155,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # Настройка Cache-Control для API ответов
         if request.url.path.startswith(("/items", "/posts", "/login", "/register")):
-            response.headers[
-                "Cache-Control"
-            ] = "no-store, no-cache, must-revalidate, private"
+            response.headers["Cache-Control"] = (
+                "no-store, no-cache, must-revalidate, private"
+            )
             response.headers["Pragma"] = "no-cache"
             response.headers["Expires"] = "0"
 
