@@ -71,7 +71,6 @@ jobs:
               -t "${ZAP_TARGET}" \
               -r zap_baseline.html \
               -J zap_baseline.json \
-              --output-summary /zap/wrk/zap_out.json \
               -m 5 \
               -a \
               -d
