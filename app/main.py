@@ -145,6 +145,26 @@ class JWTMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Middleware для добавления заголовков безопасности."""
+
+    async def dispatch(self, request: StarletteRequest, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+
+        # Настройка Cache-Control для API ответов
+        if request.url.path.startswith(("/items", "/posts", "/login", "/register")):
+            response.headers["Cache-Control"] = (
+                "no-store, no-cache, must-revalidate, private"
+            )
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+
+        return response
+
+
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(PIIMaskingMiddleware)
 app.add_middleware(CorrelationIdMiddleware)
 app.add_middleware(JWTMiddleware)
