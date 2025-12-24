@@ -145,6 +145,24 @@ class JWTMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Middleware для добавления заголовков безопасности."""
+
+    async def dispatch(self, request: StarletteRequest, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+
+        # Настройка Cache-Control для всех ответов (устраняем Storable alert)
+        cache_control = "no-store, no-cache, must-revalidate, private"
+        response.headers["Cache-Control"] = cache_control
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+
+        return response
+
+
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(PIIMaskingMiddleware)
 app.add_middleware(CorrelationIdMiddleware)
 app.add_middleware(JWTMiddleware)
@@ -277,8 +295,19 @@ async def general_exception_handler(request: Request, exc: Exception):
     )
 
 
-@app.get("/health")
+@app.get("/", include_in_schema=False)
+def root():
+    return {"message": "Simple Blog API", "health": "/healthz"}
+
+
+@app.get("/health", include_in_schema=False)
 def health():
+    return {"status": "ok"}
+
+
+@app.get("/healthz", include_in_schema=False)
+def healthz():
+    # Alias endpoint for CI/monitoring checks
     return {"status": "ok"}
 
 

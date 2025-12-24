@@ -50,7 +50,7 @@ jobs:
           docker run --rm \
             -v "${{ github.workspace }}:/work" \
             -w /work \
-            anchore/syft:${SYFT_VERSION} \
+            ghcr.io/anchore/syft:${SYFT_VERSION} \
             dir:. \
             -o json=/work/EVIDENCE/P09/sbom-syft.json \
             -o cyclonedx-json=/work/EVIDENCE/P09/sbom.json
@@ -59,6 +59,11 @@ jobs:
         env:
           GRYPE_VERSION: v0.79.1
         run: |
+          for attempt in 1 2 3; do
+            docker pull anchore/grype:${GRYPE_VERSION} && break
+            echo "Pull failed (attempt ${attempt}/3), retrying in 15s..."
+            sleep 15
+          done
           docker run --rm \
             -v "${{ github.workspace }}:/work" \
             -w /work \
