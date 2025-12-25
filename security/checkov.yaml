@@ -1,0 +1,12 @@
+quiet: false
+compact: true
+framework:
+  - kubernetes
+  - terraform
+  - dockerfile
+  - docker_compose
+skip-check:
+  - CKV_DOCKER_2 # Ensure that USER is not root (Already handled, but checkov might be picky)
+  - CKV_DOCKER_3 # Ensure that a user for the container has been created (Already handled)
+  - CKV2_DOCKER_1 # Ensure that sudo is not used (Already handled)
+

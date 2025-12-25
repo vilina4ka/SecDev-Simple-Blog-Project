@@ -1,12 +1,17 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.11-slim AS builder
+# Using specific version for better reproducibility and security
+FROM python:3.11.10-slim AS builder
+
+LABEL maintainer="SecDev Team"
+LABEL version="1.0"
+LABEL description="Simple Blog Project - Builder Stage"
 
 # Install build dependencies, create venv, install Python packages, clean up - all in one layer
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends build-essential && \
+    apt-get install -y --no-install-recommends build-essential=12.9 && \
     python -m venv /opt/venv && \
-    /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel
+    /opt/venv/bin/pip install --no-cache-dir --upgrade pip==24.2 setuptools==75.1.0 wheel==0.44.0
 
 # Set workdir before copying files
 WORKDIR /app
@@ -21,11 +26,15 @@ RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt && \
 
 ENV PATH="/opt/venv/bin:$PATH"
 
-FROM python:3.11-slim AS runtime
+FROM python:3.11.10-slim AS runtime
+
+LABEL maintainer="SecDev Team"
+LABEL version="1.0"
+LABEL description="Simple Blog Project - Runtime Stage"
 
 # Everything in single optimized layer: install deps, create user, copy files, set env, clean up
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl && \
+    apt-get install -y --no-install-recommends curl=7.88.1-10+deb12u8 && \
     groupadd -g 1000 appgroup && \
     useradd -u 1000 -g appgroup -s /bin/bash appuser && \
     apt-get clean && \

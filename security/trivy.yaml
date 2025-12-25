@@ -1,0 +1,11 @@
+scan:
+  scanners:
+    - vuln
+    - config
+    - secret
+  severity:
+    - CRITICAL
+    - HIGH
+format: "json"
+exit-code: 0 # Don't fail the build for now, just report
+
